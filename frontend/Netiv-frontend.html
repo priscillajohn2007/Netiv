@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netiv — Civic Issue Reporter for GVMC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-main:#F2FAF3;
+    --bg-panel:#FFFFFF;
+    --border:#BFE3C9;
+    --border-strong:#8FCE9F;
+    --ink:#173622;
+    --muted:#5C7A68;
+    --muted-2:#7C9689;
+    --accent:#2F9E56;
+    --accent-dark:#20793F;
+    --accent-soft:rgba(47,158,86,0.08);
+    --paper:#F1ECDD;
+    --paper-line:#D8CFB4;
+    --paper-ink:#1B2A4A;
+    --hazard:#C1502E;
+    --white:#FFFFFF;
+    --sidebar-w:76px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg-main);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .grid-bg{
+    background-color:var(--bg-main);
+    background-image:
+      radial-gradient(ellipse 800px 500px at 8% 0%, rgba(143,206,159,0.55) 0%, rgba(143,206,159,0) 60%),
+      radial-gradient(ellipse 700px 450px at 90% 8%, rgba(175,220,180,0.4) 0%, rgba(175,220,180,0) 60%),
+      radial-gradient(ellipse 900px 600px at 15% 55%, rgba(210,236,210,0.5) 0%, rgba(210,236,210,0) 65%),
+      radial-gradient(ellipse 800px 550px at 85% 60%, rgba(191,227,201,0.45) 0%, rgba(191,227,201,0) 65%),
+      radial-gradient(ellipse 900px 600px at 30% 100%, rgba(200,232,205,0.5) 0%, rgba(200,232,205,0) 65%),
+      radial-gradient(ellipse 800px 550px at 100% 100%, rgba(160,210,170,0.4) 0%, rgba(160,210,170,0) 65%);
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+    position:relative;
+  }
+  .grid-bg::before{
+    content:"";
+    position:fixed; inset:0;
+    background:radial-gradient(circle at 50% 0%, rgba(242,250,243,0) 0%, var(--bg-main) 82%);
+    pointer-events:none;
+    z-index:0;
+  }
+  h1,h2,h3,.display{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  .eyebrow{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--accent-dark); font-weight:600;
+  }
+
+  .app-shell{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    width:var(--sidebar-w); flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center;
+    padding:22px 0 26px;
+    border-right:1px solid var(--border);
+    background:var(--bg-panel);
+    position:sticky; top:0; height:100vh;
+    z-index:2;
+  }
+  .sidebar .side-top{ display:flex; flex-direction:column; align-items:center; gap:22px; }
+  .side-item{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    color:var(--muted-2); text-decoration:none; cursor:pointer; background:none; border:none;
+    font-family:'Inter',sans-serif; padding:0;
+  }
+  .side-item svg{ width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.5; }
+  .side-item span{ font-size:10px; letter-spacing:0.03em; text-align:center; line-height:1.2; }
+  .side-item:hover{ color:var(--accent); }
+  .sidebar .side-bottom{ margin-top:auto; }
+  .side-item.logout{ color:#C1502E; }
+  .side-item.logout:hover{ color:#A13F22; }
+
+  .main-col{ flex:1; min-width:0; position:relative; }
+
+  .topbar{
+    display:flex; align-items:center; gap:16px;
+    padding:22px 32px 0; max-width:1280px; margin:0 auto;
+    position:relative; z-index:1;
+  }
+  .search-box{
+    flex:1; display:flex; align-items:center; gap:10px;
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:3px; padding:10px 14px;
+  }
+  .search-box svg{ width:16px; height:16px; stroke:var(--muted-2); flex-shrink:0; }
+  .search-box input{
+    flex:1; background:none; border:none; outline:none; color:var(--ink);
+    font-family:'Inter',sans-serif; font-size:14px;
+  }
+  .search-box input::placeholder{ color:var(--muted-2); }
+  .avatar{
+    width:42px; height:42px; flex-shrink:0; border:1px solid var(--border);
+    border-radius:3px; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+    color:var(--accent-dark); background:var(--accent-soft); letter-spacing:0.02em;
+  }
+
+  .wrap{ max-width:1280px; margin:0 auto; padding:0 32px; }
+  header.hero{ padding:44px 0 56px; position:relative; z-index:1; }
+  .hero h1{ font-size:clamp(34px,6vw,54px); line-height:1.05; margin:14px 0 18px; color:var(--ink); }
+  .hero p{ font-size:17px; line-height:1.6; color:var(--muted); max-width:640px; }
+  .badge-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:26px; }
+  .badge{
+    border:1px solid var(--border); border-radius:3px; padding:6px 12px;
+    background:var(--bg-panel);
+    font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:7px;
+  }
+  .badge svg{ width:14px; height:14px; stroke:var(--accent); }
+
+  section{ position:relative; z-index:1; padding:40px 0; }
+  .section-title{ display:flex; align-items:baseline; gap:12px; margin-bottom:22px; }
+  .section-title .num{ font-family:'Courier Prime',monospace; color:var(--accent-dark); font-size:14px; }
+  .section-title h2{ font-size:22px; color:var(--ink); margin:0; }
+  .section-sub{ color:var(--muted); font-size:14.5px; margin:-14px 0 24px; max-width:640px; }
+
+  .cat-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px;
+  }
+  .cat-tile{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:4px; padding:20px 16px; cursor:pointer;
+    text-align:left; color:var(--ink); font-family:'Inter',sans-serif;
+    transition:border-color .15s ease, background .15s ease;
+    min-height:96px;
+  }
+  .cat-tile:hover{ background:var(--accent-soft); border-color:var(--accent); }
+  .cat-tile.active{ background:var(--accent-soft); border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
+  .no-cat-match{ color:var(--muted-2); font-size:13.5px; padding:6px 2px; }
+  .cat-tile svg{ width:28px; height:28px; stroke:var(--accent); stroke-width:1.4; fill:none; margin-bottom:10px; }
+  .cat-tile .name{ font-weight:600; font-size:14px; margin-bottom:4px; }
+  .cat-tile .dept{ font-size:11.5px; color:var(--muted-2); line-height:1.4; }
+
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:4px; padding:26px;
+  }
+  label{ display:block; font-size:12.5px; color:var(--accent-dark); font-weight:600; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:8px; }
+  .field{ margin-bottom:20px; }
+  input[type=text], input[type=tel], input[type=password], textarea{
+    width:100%; background:var(--bg-main); border:1px solid var(--border);
+    border-radius:3px; color:var(--ink); padding:11px 12px; font-family:'Inter',sans-serif; font-size:14.5px;
+  }
+  input::placeholder, textarea::placeholder{ color:var(--muted-2); }
+  textarea{ resize:vertical; min-height:90px; }
+  input:focus, textarea:focus{ outline:none; border-color:var(--accent); }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:640px){ .row2{ grid-template-columns:1fr; } }
+
+  .btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px;
+    border-radius:3px; padding:12px 20px; cursor:pointer; border:1px solid var(--accent);
+    background:transparent; color:var(--accent-dark); display:inline-flex; align-items:center; gap:8px;
+    transition:all .15s ease;
+  }
+  .btn:hover{ background:var(--accent); color:var(--white); }
+  .btn-solid{ background:var(--accent); color:var(--white); border-color:var(--accent); }
+  .btn-solid:hover{ background:var(--accent-dark); border-color:var(--accent-dark); }
+  .btn-ghost{ border-color:var(--border); color:var(--muted); }
+  .btn-ghost:hover{ background:var(--accent-soft); color:var(--ink); }
+  .btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  .btn:disabled:hover{ background:transparent; color:var(--accent-dark); }
+
+  .photo-zone{
+    border:1.5px dashed var(--border-strong); border-radius:4px; padding:26px; text-align:center;
+    cursor:pointer; background:var(--bg-main);
+  }
+  .photo-zone:hover{ border-color:var(--accent); }
+  .photo-zone svg{ width:30px; height:30px; stroke:var(--accent); margin-bottom:10px; }
+  .photo-zone .hint{ font-size:12.5px; color:var(--muted-2); margin-top:4px; }
+  .photo-preview{ display:flex; align-items:center; gap:14px; }
+  .photo-preview img{ width:96px; height:96px; object-fit:cover; border-radius:3px; border:1px solid var(--border); }
+
+  .loc-box{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .loc-result{ font-family:'Courier Prime',monospace; font-size:13px; color:var(--accent-dark); }
+  .loc-result a{ color:var(--accent-dark); }
+  .loc-warning{ display:block; font-size:11.5px; color:var(--hazard); margin-top:2px; }
+  .loc-status{ font-size:13px; color:var(--muted-2); }
+
+  .letter-stage{ display:none; }
+  .letter-stage.shown{ display:block; }
+  .paper{
+    background:var(--paper); color:var(--paper-ink); border-radius:2px;
+    padding:44px 40px; position:relative; overflow:hidden;
+    box-shadow:0 18px 40px rgba(23,54,34,0.15);
+    transform:scale(0.98); opacity:0; transition:transform .4s ease, opacity .4s ease;
+  }
+  .paper.reveal{ transform:scale(1); opacity:1; }
+  .paper::before{
+    content:""; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(var(--paper-line) 0 1px, transparent 1px 34px);
+    opacity:0.5; pointer-events:none;
+  }
+  .letterhead{ position:relative; border-bottom:2px solid var(--paper-ink); padding-bottom:14px; margin-bottom:22px; }
+  .letterhead .org{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.03em; }
+  .letterhead .sub{ font-size:11.5px; color:#5B6B85; margin-top:2px; }
+  .letter-body{ position:relative; font-family:'Courier Prime',monospace; font-size:13.5px; line-height:1.85; white-space:pre-wrap; }
+  .stamp{
+    position:absolute; top:26px; right:34px; width:118px; height:118px;
+    border:3px solid var(--hazard); border-radius:50%; color:var(--hazard);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; letter-spacing:0.05em;
+    transform:rotate(-14deg) scale(0); opacity:0; line-height:1.3;
+  }
+  .paper.reveal .stamp{ animation:stampIn .35s ease .5s forwards; }
+  @keyframes stampIn{ to{ transform:rotate(-14deg) scale(1); opacity:0.88; } }
+
+  .send-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:22px; }
+  @media(max-width:640px){ .send-grid{ grid-template-columns:1fr; } }
+  .send-card{
+    border:1px solid var(--border); border-radius:4px; padding:16px; text-align:left;
+    background:var(--bg-panel); color:var(--ink); text-decoration:none; display:block; cursor:pointer;
+  }
+  .send-card:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .send-card svg{ width:20px; height:20px; stroke:var(--accent); margin-bottom:10px; }
+  .send-card .t{ font-weight:600; font-size:13.5px; margin-bottom:3px; }
+  .send-card .d{ font-size:11.5px; color:var(--muted-2); line-height:1.4; }
+
+  .callout{
+    border-left:3px solid var(--accent); background:var(--accent-soft); padding:14px 16px;
+    font-size:13px; color:var(--accent-dark); border-radius:0 3px 3px 0; margin-top:20px; line-height:1.6;
+  }
+
+  footer{ padding:32px 0 56px; color:var(--muted-2); font-size:12.5px; text-align:center; }
+  .hidden{ display:none !important; }
+
+  /* ===== Auth modal ===== */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:60; padding:20px;
+    align-items:center; justify-content:center;
+    background:rgba(20,40,28,0.5); backdrop-filter:blur(3px);
+    opacity:0; transition:opacity .25s ease;
+  }
+  .modal-overlay.shown{ display:flex; }
+  .modal-overlay.reveal{ opacity:1; }
+  .modal-box{
+    width:100%; max-width:408px; max-height:90vh; overflow-y:auto;
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:8px;
+    padding:28px 28px 24px; position:relative;
+    box-shadow:0 30px 60px rgba(23,54,34,0.28);
+    transform:translateY(14px) scale(0.97); opacity:0;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+  }
+  .modal-overlay.reveal .modal-box{ transform:translateY(0) scale(1); opacity:1; }
+  .modal-box::before{
+    content:"";
+    display:block; height:16px; margin:-28px -28px 18px;
+    background-image:repeating-linear-gradient(var(--paper-line) 0 1px, transparent 1px 8px);
+    background-color:var(--paper); opacity:0.6;
+    border-bottom:2px solid var(--accent);
+  }
+
+  .modal-head{ display:flex; align-items:center; margin-bottom:6px; }
+  .modal-head .eyebrow{ margin-right:auto; }
+  .modal-close{
+    background:none; border:none; font-size:19px; line-height:1; color:var(--muted-2);
+    cursor:pointer; padding:4px; border-radius:3px; transition:color .15s ease, background .15s ease;
+  }
+  .modal-close:hover{ color:var(--ink); background:var(--accent-soft); }
+
+  .modal-title{ font-size:21px; margin:6px 0 18px; color:var(--ink); }
+
+  .tab-slider{
+    position:relative; display:flex; background:var(--bg-main); border:1px solid var(--border);
+    border-radius:6px; padding:3px; margin-bottom:22px;
+  }
+  .tab-slider .slider-thumb{
+    position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px);
+    background:var(--accent); border-radius:4px;
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    z-index:0;
+  }
+  .tab-slider.on-register .slider-thumb{ transform:translateX(100%); }
+  .modal-tab{
+    flex:1; position:relative; z-index:1; background:none; border:none; cursor:pointer;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px;
+    padding:9px 10px; border-radius:4px; color:var(--muted); transition:color .2s ease;
+  }
+  .modal-tab.active{ color:var(--white); }
+
+  .helpline-section-label{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--accent-dark); margin:14px 0 8px; }
+  .helpline-section-label:first-child{ margin-top:0; }
+  .helpline-contact{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; text-decoration:none; color:inherit; transition:border-color .15s ease, background .15s ease; }
+  .helpline-contact:hover{ border-color:var(--accent); background:var(--accent-soft); }
+  .helpline-contact .hc-role{ font-size:13px; font-weight:600; color:var(--ink); }
+  .helpline-contact .hc-name{ font-size:12px; color:var(--muted-2); margin-top:2px; }
+  .helpline-contact .hc-phone{ font-family:'Courier Prime',monospace; font-size:14px; color:var(--accent-dark); font-weight:700; white-space:nowrap; }
+
+  .auth-pane{ display:flex; flex-direction:column; gap:16px; }
+  .auth-pane.hidden{ display:none; }
+
+  .icon-field{ position:relative; }
+  .icon-field svg{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; stroke:var(--muted-2); pointer-events:none; z-index:1;
+  }
+  .icon-field input{ padding-left:38px; }
+  .icon-field .toggle-eye{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; padding:4px; color:var(--muted-2);
+    display:flex; z-index:1;
+  }
+  .icon-field .toggle-eye:hover{ color:var(--accent-dark); }
+  .icon-field .toggle-eye svg{ position:static; transform:none; }
+
+  .field-error{
+    font-size:11.5px; color:var(--hazard); margin-top:6px; height:0; overflow:hidden;
+    opacity:0; transition:opacity .15s ease;
+  }
+  .field-error.shown{ height:auto; opacity:1; }
+  .icon-field.error input{ border-color:var(--hazard); }
+  @keyframes shake{
+    10%,90%{ transform:translateX(-1px); }
+    20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-4px); }
+    40%,60%{ transform:translateX(4px); }
+  }
+  .shake{ animation:shake .4s ease; }
+
+  .auth-submit{ width:100%; justify-content:center; margin-top:2px; position:relative; }
+  .auth-submit .spinner{
+    width:15px; height:15px; border:2px solid rgba(255,255,255,0.4);
+    border-top-color:var(--white); border-radius:50%;
+    animation:spin .7s linear infinite; display:none;
+  }
+  .auth-submit.loading .btn-label{ opacity:0; }
+  .auth-submit.loading .spinner{ display:block; position:absolute; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .auth-hint{ font-size:12px; color:var(--muted-2); text-align:center; margin-top:2px; }
+
+  .auth-success{ display:none; text-align:center; padding:8px 0 4px; }
+  .auth-success.shown{ display:block; }
+  .success-check{
+    width:56px; height:56px; margin:0 auto 16px; border-radius:50%;
+    background:var(--accent-soft); display:flex; align-items:center; justify-content:center;
+  }
+  .success-check svg{ width:26px; height:26px; stroke:var(--accent); }
+  .success-check svg path{
+    stroke-dasharray:24; stroke-dashoffset:24; animation:drawCheck .45s ease .1s forwards;
+  }
+  @keyframes drawCheck{ to{ stroke-dashoffset:0; } }
+  .auth-success h3{ font-size:18px; margin:0 0 6px; color:var(--ink); }
+  .auth-success p{ font-size:13.5px; color:var(--muted); margin:0 0 18px; }
+  .success-details{
+    text-align:left; background:var(--bg-main); border:1px solid var(--border); border-radius:5px;
+    padding:14px 16px; font-size:13px; color:var(--ink); line-height:1.9; margin-bottom:18px;
+  }
+  .success-details b{ color:var(--muted); font-weight:600; display:inline-block; min-width:80px; }
+
+  /* ===== Rich Help Center (merged) ===== */
+  .help-overlay{
+    display:none; position:fixed; inset:0; z-index:60; padding:20px;
+    align-items:flex-start; justify-content:center; overflow-y:auto;
+    background:rgba(20,40,28,0.55); backdrop-filter:blur(3px);
+    opacity:0; transition:opacity .25s ease;
+  }
+  .help-overlay.shown{ display:flex; }
+  .help-overlay.reveal{ opacity:1; }
+  .help-box{
+    width:100%; max-width:960px; margin:34px 0 34px;
+    background-color:var(--bg-main);
+    background-image:
+      radial-gradient(ellipse 420px 260px at 92% 0%, rgba(143,206,159,0.35) 0%, rgba(143,206,159,0) 60%),
+      radial-gradient(ellipse 380px 300px at 4% 30%, rgba(191,227,201,0.4) 0%, rgba(191,227,201,0) 65%),
+      radial-gradient(ellipse 420px 320px at 100% 75%, rgba(210,236,210,0.4) 0%, rgba(210,236,210,0) 65%);
+    background-repeat:no-repeat;
+    border-radius:14px;
+    padding:0; position:relative; overflow:hidden;
+    box-shadow:0 40px 80px rgba(23,54,34,0.35);
+    transform:translateY(18px) scale(0.97); opacity:0;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+  }
+  .help-overlay.reveal .help-box{ transform:translateY(0) scale(1); opacity:1; }
+
+  /* --- Hero + search --- */
+  .help-top{
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    padding:44px 40px 50px; position:relative; overflow:hidden; text-align:center;
+  }
+  .help-top::before{
+    content:""; position:absolute; width:260px; height:260px; border-radius:50%;
+    background:rgba(255,255,255,0.08); top:-120px; right:-70px;
+  }
+  .help-top::after{
+    content:""; position:absolute; width:160px; height:160px; border-radius:50%;
+    background:rgba(255,255,255,0.06); bottom:-90px; left:12%;
+  }
+  .help-close{
+    position:absolute; top:18px; right:18px;
+    background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25);
+    font-size:17px; line-height:1; color:var(--white); width:30px; height:30px;
+    cursor:pointer; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, transform .15s ease; z-index:2;
+  }
+  .help-close:hover{ background:rgba(255,255,255,0.3); transform:rotate(90deg); }
+  .help-top .eyebrow-line{ color:rgba(255,255,255,0.85); font-size:13px; margin:0 0 8px; position:relative; }
+  .help-top h3{ font-size:26px; margin:0 0 8px; color:var(--white); position:relative; }
+  .help-top .sub{ font-size:13.5px; color:rgba(255,255,255,0.82); margin:0 0 22px; position:relative; }
+  .help-search{
+    max-width:480px; margin:0 auto; position:relative;
+    display:flex; align-items:center; gap:10px;
+    background:var(--white); border-radius:6px; padding:14px 18px;
+    box-shadow:0 10px 30px rgba(20,50,30,0.2);
+    border:2px solid transparent; transition:box-shadow .2s ease, border-color .2s ease;
+  }
+  .help-search:focus-within{ border-color:rgba(255,255,255,0.7); box-shadow:0 0 0 5px rgba(255,255,255,0.18), 0 10px 30px rgba(20,50,30,0.2); }
+  .help-search svg{ width:17px; height:17px; stroke:var(--muted-2); flex-shrink:0; }
+  .help-search input{ flex:1; border:none; outline:none; font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:none; }
+  .recent-chips{ max-width:480px; margin:12px auto 0; display:flex; flex-wrap:wrap; gap:7px; justify-content:center; position:relative; }
+  .recent-chips span{
+    font-size:11.5px; color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.22); padding:5px 11px; border-radius:20px; cursor:pointer;
+    transition:background .15s ease;
+  }
+  .recent-chips span:hover{ background:rgba(255,255,255,0.26); }
+
+  .help-scroll{ max-height:none; }
+  .help-section{ padding:30px 36px; border-bottom:1px solid var(--border); }
+  .help-section:last-child{ border-bottom:none; }
+  .help-section h4{
+    font-family:'Space Grotesk',sans-serif; font-size:15.5px; font-weight:600;
+    color:var(--ink); margin:0 0 4px; display:flex; align-items:center; gap:8px;
+  }
+  .help-section .section-desc{ font-size:12.5px; color:var(--muted); margin:0 0 18px; }
+
+  /* --- Quick actions --- */
+  .quick-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  @media(max-width:760px){ .quick-grid{ grid-template-columns:repeat(2,1fr); } }
+  .quick-card{
+    border:1px solid var(--border); border-radius:9px; padding:16px 12px; text-align:center;
+    background:var(--bg-panel); cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .quick-card:hover{ transform:translateY(-3px) scale(1.02); border-color:var(--accent); box-shadow:0 10px 20px rgba(47,158,86,0.16); }
+  .quick-card .qi{ font-size:22px; margin-bottom:8px; display:inline-block; transition:transform .2s ease; }
+  .quick-card:hover .qi{ transform:rotate(-8deg) scale(1.15); }
+  .quick-card .qt{ font-size:12px; font-weight:600; color:var(--ink); line-height:1.35; }
+
+  /* --- Stats --- */
+  .stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media(max-width:640px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{
+    background:var(--accent-soft); border:1px solid var(--border); border-radius:9px;
+    padding:16px 10px; text-align:center;
+  }
+  .stat-card .sv{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; color:var(--accent-dark); }
+  .stat-card .sl{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* --- Trending --- */
+  .trend-row{ display:flex; flex-wrap:wrap; gap:9px; }
+  .trend-chip{
+    display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink);
+    background:var(--bg-main); border:1px solid var(--border); padding:7px 13px; border-radius:20px;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease;
+  }
+  .trend-chip:hover{ border-color:var(--accent); background:var(--accent-soft); }
+
+  /* --- Category cards (colored) --- */
+  .help-cat-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  @media(max-width:760px){ .help-cat-grid{ grid-template-columns:1fr 1fr; } }
+  @media(max-width:480px){ .help-cat-grid{ grid-template-columns:1fr; } }
+  .help-cat-card{
+    display:flex; flex-direction:column; gap:0; text-align:left;
+    border:1px solid var(--border); border-radius:8px; padding:16px;
+    background:var(--bg-panel); cursor:pointer;
+    opacity:0; transform:translateY(8px);
+    animation:cardIn .4s ease forwards;
+    transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .help-cat-card:hover{ border-color:var(--accent); box-shadow:0 10px 24px rgba(47,158,86,0.14); transform:translateY(-3px); }
+  .help-cat-card.expanded{ transform:translateY(0); border-color:var(--accent); box-shadow:0 10px 24px rgba(47,158,86,0.14); }
+  .help-cat-main{ display:flex; gap:12px; align-items:flex-start; }
+  .cat-more{
+    font-size:11px; font-weight:600; color:var(--accent-dark); margin-top:8px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .cat-more svg{ width:12px; height:12px; stroke:var(--accent-dark); transition:transform .25s ease; }
+  .help-cat-card.expanded .cat-more svg{ transform:rotate(180deg); }
+  .cat-detail{ max-height:0; overflow:hidden; transition:max-height .3s ease, margin-top .3s ease; }
+  .help-cat-card.expanded .cat-detail{ max-height:160px; margin-top:12px; }
+  .cat-detail-inner{ font-size:12px; color:var(--muted); line-height:1.65; border-top:1px dashed var(--border); padding-top:10px; }
+  .help-overlay.reveal .help-cat-card:nth-child(1){ animation-delay:.06s; }
+  .help-overlay.reveal .help-cat-card:nth-child(2){ animation-delay:.10s; }
+  .help-overlay.reveal .help-cat-card:nth-child(3){ animation-delay:.14s; }
+  .help-overlay.reveal .help-cat-card:nth-child(4){ animation-delay:.18s; }
+  .help-overlay.reveal .help-cat-card:nth-child(5){ animation-delay:.22s; }
+  .help-overlay.reveal .help-cat-card:nth-child(6){ animation-delay:.26s; }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+  .help-cat-icon{
+    width:38px; height:38px; flex-shrink:0; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .help-cat-icon svg{ width:18px; height:18px; fill:none; stroke-width:1.6; }
+  .cat-green .help-cat-icon{ background:rgba(47,158,86,0.14); } .cat-green svg{ stroke:#2F9E56; }
+  .cat-blue .help-cat-icon{ background:rgba(45,110,200,0.13); } .cat-blue svg{ stroke:#2D6EC8; }
+  .cat-purple .help-cat-icon{ background:rgba(140,90,210,0.13); } .cat-purple svg{ stroke:#8C5AD2; }
+  .cat-orange .help-cat-icon{ background:rgba(224,140,40,0.15); } .cat-orange svg{ stroke:#E08C28; }
+  .cat-red .help-cat-icon{ background:rgba(193,80,46,0.13); } .cat-red svg{ stroke:#C1502E; }
+  .cat-teal .help-cat-icon{ background:rgba(30,160,160,0.14); } .cat-teal svg{ stroke:#1EA0A0; }
+  .help-cat-card .t{ font-weight:600; font-size:13px; margin-bottom:3px; color:var(--ink); }
+  .help-cat-card .d{ font-size:11.5px; color:var(--muted); line-height:1.5; }
+
+  .hc-no-results{
+    display:none; flex-direction:column; align-items:center; text-align:center;
+    padding:36px 20px; color:var(--muted);
+  }
+  .hc-no-results.shown{ display:flex; }
+  .hc-no-results svg{ width:30px; height:30px; stroke:var(--muted-2); margin-bottom:12px; }
+  .hc-no-results p{ font-size:13px; line-height:1.6; max-width:340px; margin:0; }
+  .hc-no-results span{ font-weight:600; color:var(--ink); }
+
+  /* --- FAQ accordion --- */
+  .faq-item{ border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+  .faq-q{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:15px 18px; cursor:pointer; background:var(--bg-panel);
+    font-size:13.5px; font-weight:600; color:var(--ink); transition:background .15s ease;
+  }
+  .faq-q:hover{ background:var(--accent-soft); }
+  .faq-q .chev{ width:16px; height:16px; stroke:var(--accent-dark); flex-shrink:0; transition:transform .25s ease; }
+  .faq-item.open .faq-q .chev{ transform:rotate(180deg); }
+  .faq-a{ max-height:0; overflow:hidden; transition:max-height .3s ease; background:var(--bg-main); }
+  .faq-item.open .faq-a{ max-height:220px; }
+  .faq-a-inner{ padding:4px 18px 16px; font-size:12.5px; color:var(--muted); line-height:1.65; }
+  .faq-a-inner ol{ margin:6px 0 0; padding-left:18px; }
+  .faq-a-inner li{ margin-bottom:3px; }
+
+  /* --- Timeline --- */
+  .timeline{ display:flex; flex-direction:column; }
+  .tl-step{ display:flex; gap:14px; position:relative; }
+  .tl-marker{ display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+  .tl-dot{
+    width:36px; height:36px; border-radius:10px; background:var(--accent); color:var(--white);
+    display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+    box-shadow:0 4px 10px rgba(47,158,86,0.3);
+  }
+  .tl-step:last-child .tl-dot{ background:var(--hazard); box-shadow:0 4px 10px rgba(193,80,46,0.3); }
+  .tl-line{ width:2px; flex:1; min-height:22px; background:var(--border-strong); margin-top:4px; }
+  .tl-step:last-child .tl-line{ display:none; }
+  .tl-content{ padding:5px 0 22px; }
+  .tl-content .tt{ font-weight:600; font-size:13.5px; color:var(--ink); margin-bottom:2px; }
+  .tl-content .td{ font-size:12px; color:var(--muted); line-height:1.5; }
+
+  /* --- Tips --- */
+  .tips-card{ background:var(--accent-soft); border:1px solid var(--border); border-radius:9px; padding:18px; }
+  .tips-card ul{ margin:0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:9px 18px; }
+  @media(max-width:480px){ .tips-card ul{ grid-template-columns:1fr; } }
+  .tips-card li{ font-size:12.5px; color:var(--ink); display:flex; align-items:flex-start; gap:7px; line-height:1.5; }
+  .tips-card li svg{ width:14px; height:14px; stroke:var(--accent-dark); flex-shrink:0; margin-top:2px; }
+
+  /* --- Contact --- */
+  .contact-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+  @media(max-width:640px){ .contact-grid{ grid-template-columns:1fr; } }
+  .contact-btn{
+    display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+    border:1px solid var(--border); border-radius:9px; padding:16px 10px; text-decoration:none;
+    background:var(--bg-panel); cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .contact-btn:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(23,54,34,0.12); }
+  .contact-btn .ci{ font-size:20px; }
+  .contact-btn.call{ border-color:rgba(47,158,86,0.4); }
+  .contact-btn.wa{ border-color:rgba(47,158,86,0.4); }
+  .contact-btn.mail{ border-color:rgba(45,110,200,0.35); }
+  .contact-btn .ct{ font-size:12px; font-weight:600; color:var(--ink); }
+  .contact-meta{ display:flex; flex-wrap:wrap; gap:18px; font-size:12.5px; color:var(--muted); }
+  .contact-meta span{ display:flex; align-items:center; gap:6px; }
+  .contact-meta svg{ width:14px; height:14px; stroke:var(--accent-dark); }
+
+  /* --- Was this helpful --- */
+  .feedback-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .feedback-row .fq{ font-size:13px; color:var(--ink); font-weight:600; }
+  .fb-btn{
+    border:1px solid var(--border); background:var(--bg-panel); border-radius:20px;
+    padding:8px 16px; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:6px;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .fb-btn:hover{ transform:scale(1.05); border-color:var(--accent); }
+  .fb-note{ display:none; margin-top:12px; }
+  .fb-note.shown{ display:block; }
+  .fb-note textarea{
+    width:100%; border:1px solid var(--border); border-radius:6px; padding:10px 12px;
+    font-family:'Inter',sans-serif; font-size:13px; color:var(--ink); background:var(--bg-main);
+    resize:vertical; min-height:60px; outline:none;
+  }
+  .fb-note textarea:focus{ border-color:var(--accent); }
+  .fb-thanks{ font-size:12.5px; color:var(--accent-dark); font-weight:600; display:none; margin-top:8px; }
+  .fb-thanks.shown{ display:block; }
+
+  /* --- Floating ask button --- */
+  .help-fab{
+    position:sticky; bottom:16px; margin-left:auto; margin-right:20px;
+    display:flex; justify-content:flex-end; padding-right:16px; pointer-events:none;
+  }
+  .help-fab button{
+    pointer-events:auto; background:var(--accent); color:var(--white); border:none;
+    border-radius:24px; padding:12px 18px; font-family:'Space Grotesk',sans-serif; font-weight:600;
+    font-size:13px; display:flex; align-items:center; gap:8px; cursor:pointer;
+    box-shadow:0 10px 24px rgba(47,158,86,0.35); transition:transform .15s ease;
+  }
+  .help-fab button:hover{ transform:scale(1.05); }
+
+  /* --- Content wrapper & section headers --- */
+  .hc-content{ padding:0 36px 6px; }
+  .hc-section{ padding:28px 0; border-top:1px solid var(--border); }
+  .hc-section:first-child{ border-top:none; padding-top:26px; }
+  .hc-section-title{ display:flex; align-items:center; gap:9px; margin-bottom:16px; }
+  .hc-section-title svg{ width:17px; height:17px; stroke:var(--accent); fill:none; stroke-width:1.7; }
+  .hc-section-title h4{
+    font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:600;
+    color:var(--ink); margin:0;
+  }
+  .hc-section-title .cnt{ font-size:11.5px; color:var(--muted-2); margin-left:auto; }
+
+  /* --- Trending / search suggestions --- */
+  .trend-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:center; position:relative; }
+  .trend-label{ font-size:12px; color:rgba(255,255,255,0.75); display:flex; align-items:center; margin-right:2px; }
+  .trend-chip{
+    border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.1);
+    color:var(--white); font-size:12px; padding:6px 13px; border-radius:20px;
+    cursor:pointer; transition:background .15s ease;
+  }
+  .trend-chip:hover{ background:rgba(255,255,255,0.22); }
+
+  /* --- Quick actions --- */
+  .qa-grid{ display:grid; grid-template-columns:repeat(2, minmax(160px,220px)); gap:14px; }
+  @media(max-width:640px){ .qa-grid{ grid-template-columns:1fr 1fr; } }
+  .qa-card{
+    border:1px solid var(--border); border-radius:12px; padding:18px 10px; text-align:center;
+    background:var(--bg-panel); cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .qa-card:hover{ transform:translateY(-4px); box-shadow:0 14px 26px rgba(23,54,34,0.14); }
+  .qa-card .qi{
+    width:44px; height:44px; margin:0 auto 10px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .qa-card:hover .qi{ transform:scale(1.12) rotate(-8deg); }
+  .qa-card .qi svg{ width:19px; height:19px; stroke:var(--white); fill:none; stroke-width:1.8; }
+  .qa-report .qi{ background:linear-gradient(135deg,#3CB86B,#217A42); box-shadow:0 6px 14px rgba(47,158,86,0.35); }
+  .qa-card.qa-report:hover{ border-color:#2F9E56; }
+  .qa-location .qi{ background:linear-gradient(135deg,#4C8FE0,#2560A8); box-shadow:0 6px 14px rgba(45,110,200,0.35); }
+  .qa-card.qa-location:hover{ border-color:#2D6EC8; }
+  .qa-track .qi{ background:linear-gradient(135deg,#2FBFBF,#187F7F); box-shadow:0 6px 14px rgba(30,160,160,0.35); }
+  .qa-card.qa-track:hover{ border-color:#1EA0A0; }
+  .qa-contact .qi{ background:linear-gradient(135deg,#F0A94E,#C97A1C); box-shadow:0 6px 14px rgba(224,140,40,0.35); }
+  .qa-card.qa-contact:hover{ border-color:#E08C28; }
+  .qa-reports .qi{ background:linear-gradient(135deg,#A277E3,#6E3FBF); box-shadow:0 6px 14px rgba(140,90,210,0.35); }
+  .qa-card.qa-reports:hover{ border-color:#8C5AD2; }
+  .qa-card .qt{ font-size:11.5px; font-weight:600; color:var(--ink); line-height:1.35; }
+
+  /* --- Stats --- */
+  .stats-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media(max-width:640px){ .stats-row{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{ text-align:center; padding:16px 8px; background:var(--accent-soft); border-radius:9px; }
+  .stat-card .sv{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; color:var(--accent-dark); }
+  .stat-card .sl{ font-size:11px; color:var(--muted); margin-top:3px; }
+
+  /* --- Getting started --- */
+  .gs-steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media(max-width:640px){ .gs-steps{ grid-template-columns:1fr 1fr; } }
+  .gs-step{ text-align:center; position:relative; }
+  .gs-step .gn{
+    width:46px; height:46px; border-radius:13px;
+    display:flex; align-items:center; justify-content:center; margin:0 auto 10px;
+    position:relative;
+  }
+  .gs-step .gn svg{ width:21px; height:21px; fill:none; stroke-width:1.7; }
+  .gs-step .gn .gbadge{
+    position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%;
+    background:var(--paper-ink); color:var(--white); font-family:'Space Grotesk',sans-serif;
+    font-weight:700; font-size:10px; display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--bg-main);
+  }
+  .gs-blue .gn{ background:rgba(45,110,200,0.14); box-shadow:0 6px 14px rgba(45,110,200,0.18); } .gs-blue .gn svg{ stroke:#2D6EC8; }
+  .gs-green .gn{ background:rgba(47,158,86,0.14); box-shadow:0 6px 14px rgba(47,158,86,0.2); } .gs-green .gn svg{ stroke:#2F9E56; }
+  .gs-orange .gn{ background:rgba(224,140,40,0.15); box-shadow:0 6px 14px rgba(224,140,40,0.2); } .gs-orange .gn svg{ stroke:#E08C28; }
+  .gs-purple .gn{ background:rgba(140,90,210,0.13); box-shadow:0 6px 14px rgba(140,90,210,0.18); } .gs-purple .gn svg{ stroke:#8C5AD2; }
+  .gs-step .gt{ font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:3px; }
+  .gs-step .gd{ font-size:11px; color:var(--muted); line-height:1.45; }
+
+  /* --- Video tutorials --- */
+  .video-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media(max-width:640px){ .video-grid{ grid-template-columns:1fr; } }
+  .video-card{ border:1px solid var(--border); border-radius:9px; overflow:hidden; cursor:pointer; background:var(--bg-panel); transition:transform .15s ease; }
+  .video-card:hover{ transform:translateY(-3px); }
+  .video-thumb{
+    height:84px; background:linear-gradient(135deg, var(--accent-soft), var(--border));
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .video-thumb .play{
+    width:36px; height:36px; border-radius:50%; background:var(--accent); display:flex;
+    align-items:center; justify-content:center; box-shadow:0 6px 14px rgba(47,158,86,0.35);
+  }
+  .video-thumb .play svg{ width:14px; height:14px; fill:var(--white); stroke:none; margin-left:2px; }
+  .video-thumb .dur{
+    position:absolute; bottom:6px; right:8px; background:rgba(0,0,0,0.6); color:var(--white);
+    font-size:10px; padding:2px 6px; border-radius:3px; font-family:'Courier Prime',monospace;
+  }
+  .video-card .vt{ font-size:12.5px; font-weight:600; color:var(--ink); padding:10px 12px 12px; }
+
+  /* --- Emergency banner --- */
+  .emergency-banner{
+    background:rgba(193,80,46,0.08); border:1px solid rgba(193,80,46,0.3); border-radius:10px;
+    padding:18px 20px;
+  }
+  .emergency-banner .eb-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+  .emergency-banner .eb-head svg{ width:19px; height:19px; stroke:var(--hazard); fill:none; stroke-width:1.8; }
+  .emergency-banner .eb-head span{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:var(--hazard); }
+  .eb-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .eb-tag{ font-size:11.5px; color:#8A3D24; background:rgba(193,80,46,0.1); padding:5px 11px; border-radius:20px; }
+  .emergency-banner .eb-call{
+    display:inline-flex; align-items:center; gap:8px; background:var(--hazard); color:var(--white);
+    text-decoration:none; padding:10px 18px; border-radius:6px; font-family:'Space Grotesk',sans-serif;
+    font-weight:600; font-size:13px;
+  }
+  .emergency-banner .eb-call svg{ width:14px; height:14px; stroke:var(--white); fill:none; stroke-width:1.8; }
+
+  /* --- Global floating chat button (outside modal) --- */
+  .global-fab{
+    position:fixed; bottom:24px; right:24px; z-index:40;
+    background:var(--accent); color:var(--white); border:none; border-radius:26px;
+    padding:13px 20px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px;
+    display:flex; align-items:center; gap:9px; cursor:pointer;
+    box-shadow:0 12px 28px rgba(47,158,86,0.4); transition:transform .18s ease;
+  }
+  .global-fab:hover{ transform:translateY(-3px) scale(1.03); }
+  .global-fab svg{ width:16px; height:16px; stroke:var(--white); fill:none; stroke-width:1.8; }
+
+  /* --- Modal footer --- */
+  .hc-footer{ padding:22px 36px 30px; border-top:1px solid var(--border); }
+  .hc-footer-top{ display:flex; flex-wrap:wrap; gap:22px; margin-bottom:14px; }
+  .hc-footer-top span{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); }
+  .hc-footer-top svg{ width:14px; height:14px; stroke:var(--accent-dark); }
+  .hc-footer-links{ display:flex; flex-wrap:wrap; gap:16px; }
+  .hc-footer-links a{ font-size:12px; color:var(--muted-2); text-decoration:none; }
+  .hc-footer-links a:hover{ color:var(--accent-dark); }
+</style>
+</head>
+<body class="grid-bg">
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="side-top">
+      <a class="side-item" href="settings.html" title="Settings">
+        <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path d="M19.4 13.5a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.9 2.9l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V20a2 2 0 11-4 0v-.09a1.7 1.7 0 00-1-1.56 1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.9-2.9l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.55-1H4a2 2 0 110-4h.09a1.7 1.7 0 001.56-1 1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.9-2.9l.06.06a1.7 1.7 0 001.87.34H10a1.7 1.7 0 001-1.55V4a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.9 2.9l-.06.06a1.7 1.7 0 00-.34 1.87V10a1.7 1.7 0 001.55 1H20a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </a>
+      <button class="side-item" type="button" title="Register" onclick="openAuthModal('register')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6" stroke-linecap="round"/><path d="M18 8h4M20 6v4" stroke-linecap="round"/></svg>
+        <span>Register</span>
+      </button>
+      <button class="side-item" type="button" title="Login" onclick="openAuthModal('login')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" stroke-linecap="round"/><path d="M10 17l5-5-5-5M15 12H3" stroke-linecap="round"/></svg>
+        <span>Login</span>
+      </button>
+      <button class="side-item" type="button" title="Help" onclick="openHelpModal()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M9.5 9.2a2.5 2.5 0 014.9.7c0 1.7-2.4 2-2.4 3.5" stroke-linecap="round"/><circle cx="12" cy="16.8" r=".55" fill="currentColor" stroke="none"/></svg>
+        <span>Help</span>
+      </button>
+    </div>
+    <div class="side-bottom">
+      <button class="side-item logout" type="button" title="Log out" onclick="logoutUser()">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke-linecap="round"/></svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-col">
+
+    <div class="topbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="Search categories…">
+      </div>
+      <div class="avatar" id="avatarBox" title="Not logged in">?</div>
+    </div>
+
+    <div class="wrap">
+
+      <header class="hero">
+        <span class="eyebrow">GVMC · Visakhapatnam</span>
+        <h1>Netiv — the bridge between<br>your street and the corporation.</h1>
+        <p>Spot a problem — overflowing garbage, a stagnant drain, a pothole — photograph it, and Netiv turns it into an official letter addressed to the right GVMC department, with your exact location attached.</p>
+        <div class="badge-row">
+          <div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20" stroke-linecap="round"/></svg>Auto geolocation</div>
+          <div class="badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Photo evidence</div>
+          <div class="badge"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>Official letter format</div>
+        </div>
+      </header>
+
+      <section>
+        <div class="section-title"><span class="num">01</span><h2>What's the problem?</h2></div>
+        <p class="section-sub">Pick the category closest to what you're reporting. This decides which GVMC department your letter is addressed to.</p>
+        <div class="cat-grid" id="catGrid"></div>
+        <div class="no-cat-match" id="noCatMatch" style="display:none; margin-top:14px;">No categories match your search.</div>
+      </section>
+      <section id="reportSection" class="hidden">
+        <div class="section-title"><span class="num">02</span><h2>Show us, and tell us where</h2></div>
+        <div class="panel">
+          <div class="field">
+            <label>Photo evidence</label>
+            <div id="photoZone" class="photo-zone">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.4"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <div>Tap to take or upload a photo</div>
+              <div class="hint">JPG or PNG · used as evidence in your letter</div>
+            </div>
+            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <div class="loc-box">
+              <button class="btn" id="locBtn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="15" height="15"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>
+                Detect my location
+              </button>
+              <span class="loc-status" id="locStatus">Not detected yet</span>
+            </div>
+          </div>
+<div class="field">
+    <label>Manual Address (Optional)</label>
+    <input type="text" id="houseInput"
+        placeholder="House No / Flat No">
+    <br><br>
+    <input type="text" id="areaInput"
+        placeholder="Area / Colony / Street">
+    <br><br>
+    <input type="text" id="landmarkInput"
+        placeholder="Nearby Landmark">
+    <br><br>
+    <div class="row2">
+        <input type="text" id="cityInput"
+            placeholder="City">
+        <input type="text" id="pincodeInput"
+            placeholder="Pincode">
+    </div>
+</div>
+          <div class="field">
+            <label>Describe the problem</label>
+            <textarea id="descInput" placeholder="e.g. Garbage has not been collected for 5 days near the bus stop, attracting stray animals."></textarea>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Your name</label>
+              <input type="text" id="nameInput" placeholder="Full name">
+            </div>
+            <div class="field">
+              <label>Phone number</label>
+              <input type="tel" id="phoneInput" placeholder="10-digit mobile number">
+            </div>
+          </div>
+
+          <button class="btn btn-solid" id="generateBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="15" height="15"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+            Generate official letter
+          </button>
+        </div>
+      </section>
+
+      <section id="letterSection" class="letter-stage">
+        <div class="section-title"><span class="num">03</span><h2>Your letter is ready</h2></div>
+        <div class="paper" id="paperCard">
+          <div class="stamp" id="stampEl">FILED<br>VIA Netiv</div>
+          <div class="letterhead">
+            <div class="org">Greater Visakhapatnam Municipal Corporation</div>
+            <div class="sub">Citizen grievance, routed via Netiv civic reporting</div>
+          </div>
+          <div class="letter-body" id="letterBody"></div>
+        </div>
+
+        <div class="send-grid">
+          <a class="send-card" id="emailCard" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg>
+            <div class="t">Send report</div>
+            <div class="d">Submits directly to the right zonal office and CCs a copy to you.</div>
+          </a>
+          <a class="send-card" id="whatsappCard" href="#" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4A8.5 8.5 0 014 12a8.5 8.5 0 0113.6-6.8A8.4 8.4 0 0121 11.5z"/><path d="M8 10.5s.5 3 4 3.5" stroke-linecap="round"/></svg>
+            <div class="t">Send on WhatsApp</div>
+            <div class="d">Opens GVMC's official grievance WhatsApp with your letter and photo ready to send.</div>
+          </a>
+          <a class="send-card" id="callCard" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 006 6L15 14l5 2v4a2 2 0 01-2 2A16 16 0 014 6a2 2 0 012-2z"/></svg>
+            <div class="t">Call the helpline</div>
+            <div class="d">See the officials for your area and choose who to call.</div>
+          </a>
+        </div>
+
+        <div class="callout">
+          "Send report" submits your letter and photo through Netiv's backend, routed to the right zone office automatically. "Send on WhatsApp" opens a pre-filled message — attach the photo manually there, since WhatsApp links can't carry attachments.
+        </div>
+      </section>
+
+      <footer>Prototype for GVMC · Visakhapatnam &mdash; contact numbers sourced from public GVMC listings, verify before real use.</footer>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="authOverlay" onclick="if(event.target===this) closeAuthModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="eyebrow">Netiv account</span>
+      <button class="modal-close" type="button" onclick="closeAuthModal()">&times;</button>
+    </div>
+    <h3 class="modal-title" id="modalTitle">Welcome back</h3>
+
+    <div class="tab-slider" id="tabSlider">
+      <div class="slider-thumb"></div>
+      <button class="modal-tab active" id="tabLogin" type="button" onclick="switchAuthTab('login')">Login</button>
+      <button class="modal-tab" id="tabRegister" type="button" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="loginPane" class="auth-pane">
+      <div class="field" style="margin-bottom:0;">
+        <label>Email</label>
+        <div class="icon-field" id="loginEmailWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg>
+          <input type="text" id="loginEmail" placeholder="Email address">
+        </div>
+        <div class="field-error" id="loginEmailErr">Enter your email</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Password</label>
+        <div class="icon-field" id="loginPassWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="5" y="10" width="14" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+          <input type="password" id="loginPassword" placeholder="Password">
+          <button type="button" class="toggle-eye" onclick="togglePw('loginPassword', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="16" height="16"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          </button>
+        </div>
+        <div class="field-error" id="loginPassErr">Enter your password</div>
+      </div>
+      <div class="field-error" id="loginServerErr" style="text-align:center; margin-bottom:0;"></div>
+      <button class="btn btn-solid auth-submit" type="button" onclick="submitLogin()">
+        <span class="btn-label">Log in</span>
+        <span class="spinner"></span>
+      </button>
+      <div class="auth-hint">New to Netiv? <a href="#" onclick="switchAuthTab('register');return false;" style="color:var(--accent-dark);">Create an account</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerPane" class="auth-pane hidden">
+      <div class="field" style="margin-bottom:0;">
+        <label>Full name</label>
+        <div class="icon-field" id="regNameWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+          <input type="text" id="regName" placeholder="Full name">
+        </div>
+        <div class="field-error" id="regNameErr">Enter your name</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Phone number</label>
+        <div class="icon-field" id="regPhoneWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 006 6L15 14l5 2v4a2 2 0 01-2 2A16 16 0 014 6a2 2 0 012-2z"/></svg>
+          <input type="tel" id="regPhone" placeholder="10-digit mobile number" maxlength="10">
+        </div>
+        <div class="field-error" id="regPhoneErr">Enter a valid 10-digit phone number</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Email</label>
+        <div class="icon-field" id="regEmailWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg>
+          <input type="text" id="regEmail" placeholder="Email address">
+        </div>
+        <div class="field-error" id="regEmailErr">Enter a valid email address</div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Password</label>
+        <div class="icon-field" id="regPassWrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><rect x="5" y="10" width="14" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+          <input type="password" id="regPassword" placeholder="Create a password (min. 6 characters)">
+          <button type="button" class="toggle-eye" onclick="togglePw('regPassword', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="16" height="16"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.6"/></svg>
+          </button>
+        </div>
+        <div class="field-error" id="regPassErr">Password must be at least 6 characters</div>
+      </div>
+      <div class="field-error" id="regServerErr" style="text-align:center; margin-bottom:0;"></div>
+      <button class="btn btn-solid auth-submit" type="button" onclick="submitRegister()">
+        <span class="btn-label">Create account</span>
+        <span class="spinner"></span>
+      </button>
+      <div class="auth-hint">Already have an account? <a href="#" onclick="switchAuthTab('login');return false;" style="color:var(--accent-dark);">Log in</a></div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="auth-success" id="authSuccess">
+      <div class="success-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h3 id="successTitle">You're in</h3>
+      <p id="successSub">Welcome to Netiv.</p>
+      <div class="success-details" id="successDetails"></div>
+      <button class="btn btn-solid" type="button" style="width:100%;justify-content:center;" onclick="closeAuthModal()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="helplineOverlay" onclick="if(event.target===this) closeHelplineModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="eyebrow">Who to call</span>
+      <button class="modal-close" type="button" onclick="closeHelplineModal()">&times;</button>
+    </div>
+    <h3 class="modal-title">Helpline numbers</h3>
+    <div id="helplineBody">
+      <p class="hint">Detecting the right officials for your area…</p>
+    </div>
+  </div>
+</div>
+
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this) closeHelpModal()">
+  <div class="help-box">
+    <button class="help-close" type="button" onclick="closeHelpModal()">&times;</button>
+    <div class="help-top">
+      <h3>Welcome to the Netiv Help Center</h3>
+    </div>
+
+    <div class="hc-content">
+
+      <!-- Quick Actions -->
+      <div class="hc-section">
+        <div class="hc-section-title">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6z"/></svg>
+          <h4>Quick Actions</h4>
+        </div>
+        <div class="qa-grid">
+          <div class="qa-card qa-report" onclick="quickAction('report')">
+            <div class="qi"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></div>
+            <div class="qt">New Complaint</div>
+          </div>
+          <div class="qa-card qa-location" onclick="quickAction('location')">
+            <div class="qi"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg></div>
+            <div class="qt">Detect Location</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Getting Started -->
+      <div class="hc-section">
+        <div class="hc-section-title">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <h4>Start Here</h4>
+        </div>
+        <div class="gs-steps">
+          <div class="gs-step gs-blue">
+            <div class="gn"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M18 8h4M20 6v4"/></svg><span class="gbadge">1</span></div>
+            <div class="gt">Create Account</div><div class="gd">Register with email &amp; phone.</div>
+          </div>
+          <div class="gs-step gs-green">
+            <div class="gn"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><circle cx="8.5" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="12" r=".6" fill="currentColor" stroke="none"/></svg><span class="gbadge">2</span></div>
+            <div class="gt">Report Issue</div><div class="gd">Pick a category &amp; describe it.</div>
+          </div>
+          <div class="gs-step gs-orange">
+            <div class="gn"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span class="gbadge">3</span></div>
+            <div class="gt">Generate Letter</div><div class="gd">Netiv drafts it for you.</div>
+          </div>
+          <div class="gs-step gs-purple">
+            <div class="gn"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg><span class="gbadge">4</span></div>
+            <div class="gt">Send Complaint</div><div class="gd">Email, WhatsApp, or call.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help Topics -->
+      <div class="hc-section" id="topicsSection">
+        <div class="hc-section-title">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16"/></svg>
+          <h4>Help Topics</h4>
+        </div>
+        <div class="help-cat-grid" id="helpCatGrid">
+          <div class="help-cat-card cat-green" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><circle cx="8.5" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="12" r=".6" fill="currentColor" stroke="none"/></svg></div>
+              <div><div class="t">Reporting an Issue</div><div class="d">How to pick a category and describe what's wrong.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Scroll to "What's the problem?" and tap the tile closest to your issue. Each category is pre-mapped to a GVMC department, so your letter reaches the right desk automatically — no need to guess who handles what.</div></div>
+          </div>
+          <div class="help-cat-card cat-blue" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg></div>
+              <div><div class="t">Location &amp; GPS</div><div class="d">Auto-detecting your address or entering it manually.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Tap "Detect my location" and allow the permission prompt — Netiv fills in your GPS coordinates and address automatically. If GPS fails or is unavailable, use the manual fields for house number, area, landmark, city, and pincode instead.</div></div>
+          </div>
+          <div class="help-cat-card cat-teal" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+              <div><div class="t">Photo Evidence</div><div class="d">Attaching a photo to support your complaint.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Tap the photo zone to take or upload a picture. Clear, well-lit photos that show the full extent of the issue get faster action — try to include a nearby landmark or signage in the frame if possible.</div></div>
+          </div>
+          <div class="help-cat-card cat-orange" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></div>
+              <div><div class="t">Your Letter</div><div class="d">How the official letter is generated and formatted.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Tapping "Generate official letter" drafts a formal complaint addressed to the GVMC Commissioner through the correct department, with your description, photo status, and location already filled in — ready to send.</div></div>
+          </div>
+          <div class="help-cat-card cat-purple" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg></div>
+              <div><div class="t">Sending It</div><div class="d">Email, WhatsApp, or helpline — pick what's easiest.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Once your letter is ready, send it by email or WhatsApp to GVMC's official grievance channels, or call the toll-free helpline directly for urgent issues. Browsers can't attach the photo automatically yet — attach it manually before sending.</div></div>
+          </div>
+          <div class="help-cat-card cat-red" onclick="toggleCatDetail(this)">
+            <div class="help-cat-main">
+              <div class="help-cat-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M18 8h4M20 6v4"/></svg></div>
+              <div><div class="t">Account &amp; Login</div><div class="d">Managing your Netiv account, email, and phone number.</div></div>
+            </div>
+            <div class="cat-more"><span>Read guide</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg></div>
+            <div class="cat-detail"><div class="cat-detail-inner">Register with your email, phone number, and a password to save your details for future reports. Once logged in, Netiv can pre-fill your name and phone number so you don't retype them every time.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="hc-section" id="faqSection">
+        <div class="hc-section-title">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M9.5 9.2a2.5 2.5 0 014.9.7c0 1.7-2.4 2-2.4 3.5"/><circle cx="12" cy="16.8" r=".55" fill="currentColor" stroke="none"/></svg>
+          <h4>Frequently Asked Questions</h4>
+        </div>
+        <div id="faqList">
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              <span>How do I submit a complaint?</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="faq-a"><div class="faq-a-inner">
+              <ol>
+                <li>Tap a category under "What's the problem?"</li>
+                <li>Upload a photo and detect your location</li>
+                <li>Describe the issue and add your details</li>
+                <li>Generate the official letter</li>
+                <li>Send it by email, WhatsApp, or call the helpline</li>
+              </ol>
+            </div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              <span>Why isn't my GPS working?</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="faq-a"><div class="faq-a-inner">Check that location permission is allowed for this site in your browser settings, and that GPS is turned on. If it still fails, use the manual address fields instead — house number, area, landmark, city, and pincode.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              <span>Can I edit my complaint after generating the letter?</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="faq-a"><div class="faq-a-inner">Yes — just update the description, photo, or location fields and tap "Generate official letter" again. It will rebuild the letter with your latest details.</div></div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              <span>How long does GVMC take to respond?</span>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="faq-a"><div class="faq-a-inner">Response times vary by department and issue severity. For urgent matters, calling the toll-free helpline directly usually gets the fastest attention.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hc-no-results" id="hcNoResults">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+        <p>No help topics or questions match <span id="hcNoResultsTerm"></span>. Try a different word, or call the helpline for direct help.</p>
+      </div>
+
+      <!-- Timeline -->
+      <div class="hc-section">
+        <div class="hc-section-title">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 2v4M16 2v4M4 10h16"/></svg>
+          <h4>Complaint Process Timeline</h4>
+        </div>
+        <div class="timeline">
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8"/></svg></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tt">Report Issue</div><div class="td">Pick the category that matches your problem.</div></div>
+          </div>
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/></svg></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tt">Upload Photo</div><div class="td">Attach evidence of the issue.</div></div>
+          </div>
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/></svg></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tt">Detect Location</div><div class="td">GPS or manual address entry.</div></div>
+          </div>
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tt">Generate Letter</div><div class="td">Netiv drafts the official complaint.</div></div>
+          </div>
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tt">Send to GVMC</div><div class="td">Email, WhatsApp, or helpline call.</div></div>
+          </div>
+          <div class="tl-step">
+            <div class="tl-marker"><div class="tl-dot"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="1.8"><path d="M5 13l4 4L19 7"/></svg></div></div>
+            <div class="tl-content"><div class="tt">Wait for Response</div><div class="td">The concerned department takes action.</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="hc-footer">
+      <div class="hc-footer-top">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 6l8 6 8-6"/></svg>support@netiv.in</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 006 6L15 14l5 2v4a2 2 0 01-2 2A16 16 0 014 6a2 2 0 012-2z"/></svg>1800-4250-0009</span>
+      </div>
+      <div class="hc-footer-links">
+        <a href="#">Privacy Policy</a><a href="#">Terms</a><a href="#">About Netiv</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="global-fab" type="button" onclick="openHelpModal()" title="Ask Netiv">
+  <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-1.1 4.2l1.1 4.3-4.4-1.1a8.4 8.4 0 01-4.1 1.1 8.5 8.5 0 118.5-8.5z"/></svg>
+  Ask Netiv
+</button>
+
+<script>
+const API_BASE = 'http://localhost:4000';
+
+const categories = [
+  { id:'garbage', name:'Garbage & waste overflow', dept:'Sanitation Department, GVMC', icon:'<path d="M6 8h12l-1 12H7z"/><path d="M9 8V6h6v2"/><path d="M10 12v5M14 12v5"/>' },
+  { id:'drainage', name:'Drainage & stagnant water', dept:'Executive Engineer (Works), GVMC', icon:'<circle cx="12" cy="10" r="5"/><path d="M4 10c2 0 2 2 4 2s2-2 4-2 2 2 4 2 2-2 4-2" transform="translate(0,7)"/>' },
+  { id:'mosquito', name:'Mosquito breeding', dept:'City Biologist / Health Dept, GVMC', icon:'<ellipse cx="12" cy="13" rx="2.4" ry="4"/><path d="M12 9V4M9 6l3-2 3 2M8 12H3M16 12h5M9 17l-3 3M15 17l3 3"/>' },
+  { id:'pothole', name:'Potholes & road damage', dept:'Executive Engineer (Roads), GVMC', icon:'<path d="M3 17h18"/><ellipse cx="12" cy="13.5" rx="4.2" ry="2" stroke-dasharray="2.5 2"/>' },
+  { id:'wall', name:'Broken walls / footpaths', dept:'City Planning Department, GVMC', icon:'<rect x="4" y="5" width="16" height="14"/><path d="M4 9h16M4 14h16M9 5v4M15 9v5M9 14v5" /><path d="M11 5l3 14" stroke="#C1502E"/>' },
+  { id:'streetlight', name:'Street lighting', dept:'Electrical (E&M) Wing, GVMC', icon:'<path d="M12 3v6"/><circle cx="12" cy="12" r="3.2"/><path d="M8 20h8M9 22h6"/><path d="M6 8l1.4 1.4M18 8l-1.4 1.4" stroke-dasharray="1.5 1.5"/>' },
+  { id:'water', name:'Water supply & leakage', dept:'Public Health Engineering Dept, GVMC', icon:'<path d="M12 3c3 4 5 7 5 10a5 5 0 01-10 0c0-3 2-6 5-10z"/><path d="M9.5 13.5a2.5 2.5 0 002.5 2.5" stroke-linecap="round"/>' },
+  { id:'stray', name:'Stray animal menace', dept:'Veterinary & Animal Husbandry Dept, GVMC', icon:'<circle cx="12" cy="14" r="5"/><path d="M8 10l-1.5-3M16 10l1.5-3M9.5 13.5h.01M14.5 13.5h.01" stroke-linecap="round"/><path d="M10 16.5c.7.6 1.3.6 2 0" stroke-linecap="round"/>' },
+  { id:'parking', name:'Illegal parking', dept:'Traffic & Enforcement Wing, GVMC', icon:'<rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 17v2M18 17v2M4 12h16"/><circle cx="7.5" cy="19" r="1" fill="#C1502E" stroke="none"/><circle cx="16.5" cy="19" r="1" fill="#C1502E" stroke="none"/>' },
+  { id:'tree', name:'Fallen tree / branch', dept:'Parks & Horticulture Dept, GVMC', icon:'<path d="M12 3v9" stroke-linecap="round"/><path d="M12 5c-2 0-4 1.5-4 3.5S9 12 12 12s4-1.5 4-3.5S14 5 12 5z"/><path d="M6 20h12" stroke-linecap="round"/>' },
+  { id:'noise', name:'Noise pollution', dept:'Environmental Cell, GVMC', icon:'<path d="M4 10v4h3l4 4V6l-4 4z"/><path d="M16 9a5 5 0 010 6M18.5 7a8.5 8.5 0 010 10" stroke-linecap="round"/>' },
+  { id:'toilet', name:'Public toilet maintenance', dept:'Sanitation Department, GVMC', icon:'<rect x="6" y="4" width="12" height="16" rx="1.5"/><circle cx="12" cy="8" r="1.4" fill="currentColor" stroke="none"/><path d="M9 20v-4a3 3 0 016 0v4" />' },
+  { id:'encroachment', name:'Illegal encroachment', dept:'City Planning Department, GVMC', icon:'<path d="M4 20h16"/><path d="M6 20V9l6-4 6 4v11"/><path d="M10 20v-5h4v5" stroke="#C1502E"/>' },
+  { id:'signal', name:'Traffic signal malfunction', dept:'Traffic & Enforcement Wing, GVMC', icon:'<rect x="9" y="3" width="6" height="15" rx="2"/><circle cx="12" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="10.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none"/><path d="M9 21h6" stroke-linecap="round"/>' },
+  { id:'wiring', name:'Exposed electrical wiring', dept:'Electrical (E&M) Wing, GVMC', icon:'<path d="M5 8c3 0 3 3 6 3s3-3 6-3M5 14c3 0 3 3 6 3s3-3 6-3" stroke-linecap="round"/><circle cx="11" cy="11" r=".6" fill="#C1502E" stroke="none"/>' },
+  { id:'dumping', name:'Illegal dumping / debris', dept:'Sanitation Department, GVMC', icon:'<path d="M4 18l3-9h10l3 9z"/><path d="M8 9V6h8v3M4 18h16" /><path d="M10 12l1.5 3M14 12l-1.5 3" stroke="#C1502E"/>' },
+  { id:'other', name:'Other civic issue', dept:'General Grievance Cell, GVMC', icon:'<rect x="4" y="4" width="16" height="16" rx="1"/><circle cx="8.5" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r=".6" fill="currentColor" stroke="none"/><circle cx="15.5" cy="12" r=".6" fill="currentColor" stroke="none"/>' }
+];
+
+const catGrid = document.getElementById('catGrid');
+let selectedCategory = null;
+categories.forEach(cat=>{
+  const tile = document.createElement('button');
+  tile.className='cat-tile'; tile.type='button'; tile.dataset.id=cat.id;
+  tile.innerHTML = `<svg viewBox="0 0 24 24">${cat.icon}</svg><div class="name">${cat.name}</div><div class="dept">${cat.dept}</div>`;
+  tile.addEventListener('click', ()=>{
+    document.querySelectorAll('.cat-tile').forEach(t=>t.classList.remove('active'));
+    tile.classList.add('active');
+    selectedCategory = cat;
+
+    if (!localStorage.getItem('netiv_token')) {
+      openAuthModal('register');
+      return;
+    }
+    document.getElementById('reportSection').classList.remove('hidden');
+    document.getElementById('reportSection').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  catGrid.appendChild(tile);
+});
+
+let photoDataUrl = null;
+const photoZone = document.getElementById('photoZone');
+const photoInput = document.getElementById('photoInput');
+photoZone.addEventListener('click', ()=>photoInput.click());
+photoInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    photoDataUrl = ev.target.result;
+    photoZone.innerHTML = `<div class="photo-preview"><img src="${photoDataUrl}"><div><div style="font-weight:600;font-size:13.5px">${file.name}</div><div class="hint">Tap to change photo</div></div></div>`;
+  };
+  reader.readAsDataURL(file);
+});
+
+let coords = null;
+const locBtn = document.getElementById('locBtn');
+const locStatus = document.getElementById('locStatus');
+locBtn.addEventListener('click', ()=>{
+  if(!navigator.geolocation){
+    locStatus.textContent = 'Geolocation not supported on this browser';
+    return;
+  }
+  locStatus.textContent = 'Detecting…';
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lng}`)
+.then(response => response.json())
+.then(data => {
+    const address = data.address;
+    document.getElementById("houseInput").value =
+        address.house_number || "";
+    document.getElementById("areaInput").value =
+        address.suburb ||
+        address.neighbourhood ||
+        address.road || "";
+    document.getElementById("landmarkInput").value =
+        address.road || "";
+    document.getElementById("cityInput").value =
+        address.city ||
+        address.town ||
+        address.village ||
+        "";
+    document.getElementById("pincodeInput").value =
+        address.postcode || "";
+});
+      const accuracyMeters = Math.round(pos.coords.accuracy || 0);
+      const accuracyNote = accuracyMeters > 100
+        ? `<span class="loc-warning">Approximate location (accuracy ~${accuracyMeters}m) — please double-check the address fields below</span>`
+        : '';
+      locStatus.innerHTML = `<span class="loc-result">${coords.lat}, ${coords.lng} &middot; <a href="https://maps.google.com/?q=${coords.lat},${coords.lng}" target="_blank">view on map</a></span>${accuracyNote}`;
+    },
+    (err)=>{ locStatus.textContent = 'Could not detect location — check permissions and try again'; },
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+});
+
+function todayFormatted(){
+  const d = new Date();
+  return d.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+}
+
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  if(!selectedCategory){ alert('Pick a category above first.'); return; }
+  const desc = document.getElementById('descInput').value.trim() || '(no additional description provided)';
+  const name = document.getElementById('nameInput').value.trim() || '[Your name]';
+  const phone = document.getElementById('phoneInput').value.trim() || '[Your phone number]';
+  const house = document.getElementById("houseInput").value.trim();
+const area = document.getElementById("areaInput").value.trim();
+const landmark = document.getElementById("landmarkInput").value.trim();
+const city = document.getElementById("cityInput").value.trim();
+const pincode = document.getElementById("pincodeInput").value.trim();
+const gpsLocation = coords
+    ? `${coords.lat}, ${coords.lng}
+Google Maps: https://maps.google.com/?q=${coords.lat},${coords.lng}`
+    : "GPS Location Not Detected";
+const manualAddress = `
+House No: ${house || "-"}
+Area / Street: ${area || "-"}
+Landmark: ${landmark || "-"}
+City: ${city || "-"}
+Pincode: ${pincode || "-"}`;
+const locLine = `GPS Location:${gpsLocation}
+Manual Address:${manualAddress}`;
+  const letterText =`Date: ${todayFormatted()}
+To,
+The Commissioner,
+Greater Visakhapatnam Municipal Corporation
+Tenneti Bhavan, Ramnagar, Visakhapatnam - 530002
+Through: ${selectedCategory.dept}
+Subject: Complaint regarding ${selectedCategory.name.toLowerCase()} at the location below
+Respected Sir/Madam,
+I am writing to bring to your notice a civic issue in my locality under the category "${selectedCategory.name}".
+Details of the issue:
+${desc}
+Location of the issue:${locLine}
+Photo evidence: ${photoDataUrl ? 'attached' : 'not attached — please attach manually before sending'}
+I request the concerned department to take necessary action at the earliest.
+Regards,
+${name}
+${phone}
+— Filed via Netiv, a citizen civic-reporting tool`;
+  document.getElementById('letterBody').textContent = letterText;
+  const letterSection = document.getElementById('letterSection');
+  letterSection.classList.add('shown');
+  const paper = document.getElementById('paperCard');
+  paper.classList.remove('reveal');
+  void paper.offsetWidth;
+  paper.classList.add('reveal');
+  letterSection.scrollIntoView({behavior:'smooth', block:'start'});
+  const subject = encodeURIComponent(`Civic complaint: ${selectedCategory.name} — ${name}`);
+  const body = encodeURIComponent(letterText);
+  document.getElementById('whatsappCard').href = `https://wa.me/919666909192?text=${body}`;
+});
+
+/* Search bar: filters the problem categories */
+const searchInput = document.querySelector('.search-box input');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+
+  let anyCatVisible = false;
+  document.querySelectorAll('.cat-tile').forEach(tile=>{
+    const match = tile.textContent.toLowerCase().includes(q);
+    tile.style.display = match ? '' : 'none';
+    if(match) anyCatVisible = true;
+  });
+  document.getElementById('noCatMatch').style.display = (q && !anyCatVisible) ? 'block' : 'none';
+});
+
+// Press Enter to jump straight to the report form with the top matching
+// category selected — no need to scroll down and click it manually.
+searchInput.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter') return;
+  const firstMatch = Array.from(document.querySelectorAll('.cat-tile'))
+    .find(tile => tile.style.display !== 'none');
+  if(firstMatch){
+    firstMatch.click();
+    searchInput.blur();
+  }
+});
+
+/* ===== Rich Help Center (merged) ===== */
+function openHelpModal(){
+  const overlay = document.getElementById('helpOverlay');
+  overlay.classList.add('shown');
+  void overlay.offsetWidth;
+  overlay.classList.add('reveal');
+  const searchInput = document.getElementById('helpSearchInput');
+  if(searchInput){ searchInput.value = ''; filterHelpSearch(''); }
+  // restart the card entrance animation every time it's opened
+  document.querySelectorAll('.help-cat-card').forEach(el=>{
+    el.style.animation = 'none';
+    void el.offsetHeight;
+    el.style.animation = '';
+  });
+}
+function closeHelpModal(){
+  const overlay = document.getElementById('helpOverlay');
+  overlay.classList.remove('reveal');
+  setTimeout(()=>overlay.classList.remove('shown'), 200);
+}
+function toggleFaq(el){
+  const item = el.closest('.faq-item');
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+function toggleCatDetail(card){
+  card.classList.toggle('expanded');
+}
+function fillHelpSearch(term){
+  const input = document.getElementById('helpSearchInput');
+  if(input){ input.value = term; filterHelpSearch(term); }
+}
+function filterHelpSearch(raw){
+  const term = raw.trim().toLowerCase();
+  const cards = document.querySelectorAll('#helpCatGrid .help-cat-card');
+  const faqs = document.querySelectorAll('#faqList .faq-item');
+  let visibleCount = 0;
+
+  cards.forEach(card=>{
+    const text = card.querySelector('.t').textContent.toLowerCase()
+      + ' ' + card.querySelector('.d').textContent.toLowerCase()
+      + ' ' + card.querySelector('.cat-detail-inner').textContent.toLowerCase();
+    const match = term === '' || text.includes(term);
+    card.style.display = match ? '' : 'none';
+    if(match) visibleCount++;
+  });
+
+  faqs.forEach(item=>{
+    const text = item.querySelector('.faq-q span').textContent.toLowerCase()
+      + ' ' + item.querySelector('.faq-a-inner').textContent.toLowerCase();
+    const match = term === '' || text.includes(term);
+    item.style.display = match ? '' : 'none';
+    if(match) visibleCount++;
+  });
+
+  document.getElementById('topicsSection').style.display = (term === '' || [...cards].some(c=>c.style.display!=='none')) ? '' : 'none';
+  document.getElementById('faqSection').style.display = (term === '' || [...faqs].some(f=>f.style.display!=='none')) ? '' : 'none';
+
+  const noResults = document.getElementById('hcNoResults');
+  if(term !== '' && visibleCount === 0){
+    document.getElementById('hcNoResultsTerm').textContent = `"${raw.trim()}"`;
+    noResults.classList.add('shown');
+  } else {
+    noResults.classList.remove('shown');
+  }
+}
+function quickAction(action){
+  closeHelpModal();
+  if(action === 'report'){
+    document.getElementById('reportSection') && document.getElementById('reportSection').scrollIntoView({behavior:'smooth', block:'start'});
+    document.querySelector('.cat-grid') && document.querySelector('.cat-grid').scrollIntoView({behavior:'smooth', block:'start'});
+  } else if(action === 'location'){
+    const locBtn = document.getElementById('locBtn');
+    if(locBtn){ locBtn.scrollIntoView({behavior:'smooth', block:'center'}); locBtn.click(); }
+  } else if(action === 'contact'){
+    window.location.href = 'tel:18004250009';
+  } else if(action === 'track' || action === 'reports'){
+    openAuthModal ? openAuthModal('login') : null;
+  }
+}
+
+/* ===== Helpline: show zone officials for the entered area, let user pick who to call ===== */
+const helplineOverlay = document.getElementById('helplineOverlay');
+const helplineBody = document.getElementById('helplineBody');
+
+function closeHelplineModal(){
+  helplineOverlay.classList.remove('reveal');
+  setTimeout(()=> helplineOverlay.classList.remove('shown'), 150);
+}
+
+function contactRowHtml(c){
+  const nameLine = c.name ? `<div class="hc-name">${c.name}</div>` : '';
+  return `<a class="helpline-contact" href="tel:${c.phone}">
+    <div class="hc-info"><div class="hc-role">${c.role}</div>${nameLine}</div>
+    <div class="hc-phone">${c.phone}</div>
+  </a>`;
+}
+
+document.getElementById('callCard').addEventListener('click', async (e) => {
+  e.preventDefault();
+  helplineBody.innerHTML = '<p>Detecting the right officials for your area…</p>';
+  helplineOverlay.classList.add('shown');
+  requestAnimationFrame(()=> helplineOverlay.classList.add('reveal'));
+
+  const area = document.getElementById('areaInput').value.trim();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/helpline?area=${encodeURIComponent(area)}`);
+    const data = await res.json();
+
+    let html = '';
+    if (data.contacts && data.contacts.length) {
+      html += `<div class="helpline-section-label">${data.zone} Zone</div>`;
+      html += data.contacts.map(contactRowHtml).join('');
+    } else if (area) {
+      html += `<p class="hint">We couldn't match "${area}" to a specific zone office — try these citywide numbers instead:</p>`;
+    } else {
+      html += `<p class="hint">Enter your area above for zone-specific officials, or use these citywide numbers:</p>`;
+    }
+
+    html += `<div class="helpline-section-label">Citywide</div>`;
+    html += data.cityWide.map(contactRowHtml).join('');
+
+    helplineBody.innerHTML = html;
+  } catch (err) {
+    helplineBody.innerHTML = '<p class="hint">Could not reach the server. Try calling the GVMC toll-free helpline: <a href="tel:18004250009">1800-425-0009</a></p>';
+  }
+});
+const emailCard = document.getElementById('emailCard');
+const emailCardTitle = emailCard.querySelector('.t');
+const emailCardDesc = emailCard.querySelector('.d');
+
+emailCard.addEventListener('click', async (e) => {
+  e.preventDefault();
+
+  const token = localStorage.getItem('netiv_token');
+  if (!token) {
+    alert('Please log in first, then generate and send your report.');
+    openAuthModal('login');
+    return;
+  }
+  if (!selectedCategory) { alert('Pick a category above first.'); return; }
+
+  const originalTitle = emailCardTitle.textContent;
+  const originalDesc = emailCardDesc.textContent;
+  emailCardTitle.textContent = 'Sending…';
+  emailCardDesc.textContent = 'Please wait while we submit your report.';
+
+  try {
+    const formData = new FormData();
+    formData.append('categoryId', selectedCategory.id);
+    formData.append('categoryName', selectedCategory.name);
+    formData.append('deptName', selectedCategory.dept);
+    formData.append('description', document.getElementById('descInput').value.trim());
+    formData.append('area', document.getElementById('areaInput').value.trim());
+    formData.append('house', document.getElementById('houseInput').value.trim());
+    formData.append('landmark', document.getElementById('landmarkInput').value.trim());
+    formData.append('city', document.getElementById('cityInput').value.trim());
+    formData.append('pincode', document.getElementById('pincodeInput').value.trim());
+    formData.append('name', document.getElementById('nameInput').value.trim());
+    formData.append('phone', document.getElementById('phoneInput').value.trim());
+    if (coords) {
+      formData.append('lat', coords.lat);
+      formData.append('lng', coords.lng);
+    }
+    const photoFile = document.getElementById('photoInput').files[0];
+    if (photoFile) formData.append('photo', photoFile);
+
+    const res = await fetch(`${API_BASE}/api/reports`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      emailCardTitle.textContent = 'Failed to send';
+      emailCardDesc.textContent = data.error || 'Something went wrong. Please try again.';
+      return;
+    }
+
+    emailCardTitle.textContent = `Sent — Ref #${data.referenceNo}`;
+    emailCardDesc.textContent = data.zone && data.zone !== 'Unknown'
+      ? `Routed to the ${data.zone} zone office. A copy was CC'd to your email.`
+      : `Sent to GVMC. A copy was CC'd to your email.`;
+  } catch (err) {
+    emailCardTitle.textContent = 'Could not reach server';
+    emailCardDesc.textContent = 'Check that the backend is running, then try again.';
+  }
+});
+
+/* ===== Auth modal ===== */
+function openAuthModal(tab){
+  const overlay = document.getElementById('authOverlay');
+  resetAuthUI();
+  overlay.classList.add('shown');
+  void overlay.offsetWidth;
+  overlay.classList.add('reveal');
+  switchAuthTab(tab);
+}
+function closeAuthModal(){
+  const overlay = document.getElementById('authOverlay');
+  overlay.classList.remove('reveal');
+  setTimeout(()=>overlay.classList.remove('shown'), 200);
+
+  if (selectedCategory && localStorage.getItem('netiv_token')) {
+    const reportSection = document.getElementById('reportSection');
+    if (reportSection.classList.contains('hidden')) {
+      reportSection.classList.remove('hidden');
+      setTimeout(()=> reportSection.scrollIntoView({behavior:'smooth', block:'start'}), 220);
+    }
+  }
+}
+function resetAuthUI(){
+  document.getElementById('authSuccess').classList.remove('shown');
+  document.querySelectorAll('.field-error').forEach(e=>e.classList.remove('shown'));
+  document.querySelectorAll('.icon-field').forEach(e=>e.classList.remove('error'));
+  document.querySelectorAll('.auth-submit').forEach(b=>b.classList.remove('loading'));
+  document.getElementById('loginServerErr').textContent = '';
+  document.getElementById('regServerErr').textContent = '';
+}
+function switchAuthTab(tab){
+  const isLogin = tab === 'login';
+  document.getElementById('tabSlider').classList.toggle('on-register', !isLogin);
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('loginPane').classList.toggle('hidden', !isLogin);
+  document.getElementById('registerPane').classList.toggle('hidden', isLogin);
+  document.getElementById('modalTitle').textContent = isLogin ? 'Welcome back' : 'Create your account';
+  document.getElementById('authSuccess').classList.remove('shown');
+  const wrapper = isLogin ? document.getElementById('loginPane') : document.getElementById('registerPane');
+  wrapper.classList.remove('hidden');
+}
+function togglePw(id, btn){
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+function showFieldError(wrapId, errId, show){
+  document.getElementById(wrapId).classList.toggle('error', show);
+  document.getElementById(errId).classList.toggle('shown', show);
+}
+function shakeBtn(container){
+  container.classList.remove('shake'); void container.offsetWidth; container.classList.add('shake');
+}
+
+function updateLoggedInUI(){
+  const raw = localStorage.getItem('netiv_user');
+  const avatar = document.getElementById('avatarBox');
+  if(raw){
+    const user = JSON.parse(raw);
+    const initials = (user.name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    avatar.textContent = initials;
+    avatar.title = user.name + ' (' + user.email + ')';
+  } else {
+    avatar.textContent = '?';
+    avatar.title = 'Not logged in';
+  }
+}
+function logoutUser(){
+  localStorage.removeItem('netiv_token');
+  localStorage.removeItem('netiv_user');
+  updateLoggedInUI();
+}
+updateLoggedInUI();
+
+async function submitLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const emailOk = email.length > 3 && email.includes('@');
+  const passOk = pass.length > 0;
+  showFieldError('loginEmailWrap','loginEmailErr', !emailOk);
+  showFieldError('loginPassWrap','loginPassErr', !passOk);
+  document.getElementById('loginServerErr').textContent = '';
+  const btn = document.querySelectorAll('#loginPane .auth-submit')[0];
+  if(!emailOk || !passOk){ shakeBtn(document.getElementById('loginPane')); return; }
+
+  btn.classList.add('loading');
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    btn.classList.remove('loading');
+
+    if(!res.ok){
+      document.getElementById('loginServerErr').textContent = data.error || 'Login failed.';
+      document.getElementById('loginServerErr').classList.add('shown');
+      shakeBtn(document.getElementById('loginPane'));
+      return;
+    }
+
+    localStorage.setItem('netiv_token', data.token);
+    localStorage.setItem('netiv_user', JSON.stringify(data.user));
+    updateLoggedInUI();
+
+    document.getElementById('loginPane').classList.add('hidden');
+    document.getElementById('registerPane').classList.add('hidden');
+    document.getElementById('successTitle').textContent = 'Logged in';
+    document.getElementById('successSub').textContent = 'Good to see you again on Netiv.';
+    document.getElementById('successDetails').innerHTML =
+      `<b>Name</b> ${data.user.name}<br><b>Email</b> ${data.user.email}`;
+    document.getElementById('authSuccess').classList.add('shown');
+  } catch (err) {
+    btn.classList.remove('loading');
+    document.getElementById('loginServerErr').textContent = 'Could not reach the server. Is it running?';
+    document.getElementById('loginServerErr').classList.add('shown');
+    shakeBtn(document.getElementById('loginPane'));
+  }
+}
+
+async function submitRegister(){
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPassword').value;
+  const nameOk = name.length > 0;
+  const phoneOk = /^\d{10}$/.test(phone);
+  const emailOk = email.length > 3 && email.includes('@');
+  const passOk = pass.length >= 6;
+  showFieldError('regNameWrap','regNameErr', !nameOk);
+  showFieldError('regPhoneWrap','regPhoneErr', !phoneOk);
+  showFieldError('regEmailWrap','regEmailErr', !emailOk);
+  showFieldError('regPassWrap','regPassErr', !passOk);
+  document.getElementById('regServerErr').textContent = '';
+  const btn = document.querySelectorAll('#registerPane .auth-submit')[0];
+  if(!nameOk || !phoneOk || !emailOk || !passOk){ shakeBtn(document.getElementById('registerPane')); return; }
+
+  btn.classList.add('loading');
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password: pass })
+    });
+    const data = await res.json();
+    btn.classList.remove('loading');
+
+    if(!res.ok){
+      document.getElementById('regServerErr').textContent = data.error || 'Registration failed.';
+      document.getElementById('regServerErr').classList.add('shown');
+      shakeBtn(document.getElementById('registerPane'));
+      return;
+    }
+
+    localStorage.setItem('netiv_token', data.token);
+    localStorage.setItem('netiv_user', JSON.stringify(data.user));
+    updateLoggedInUI();
+
+    document.getElementById('loginPane').classList.add('hidden');
+    document.getElementById('registerPane').classList.add('hidden');
+    document.getElementById('successTitle').textContent = 'Account created';
+    document.getElementById('successSub').textContent = 'Welcome to Netiv, ' + name.split(' ')[0] + '.';
+    document.getElementById('successDetails').innerHTML =
+      `<b>Name</b> ${data.user.name}<br><b>Email</b> ${data.user.email}`;
+    document.getElementById('authSuccess').classList.add('shown');
+  } catch (err) {
+    btn.classList.remove('loading');
+    document.getElementById('regServerErr').textContent = 'Could not reach the server. Is it running?';
+    document.getElementById('regServerErr').classList.add('shown');
+    shakeBtn(document.getElementById('registerPane'));
+  }
+}
+</script>
+</body>
+</html>
