@@ -4,7 +4,7 @@ const zoneEmails = {
   North: "netivz02@gmail.com",
   South: "netivz03@gmail.com",
   Gajuwaka: "shannu301006@gmail.com",
-  Pendurthi: "priscillajohn7997@gmail.com",
+  Pendurthi: "anielajohn77@gmail.com",
   Bheemunipatnam: "polamarasettyakhila626@gmail.com",
 };
 
