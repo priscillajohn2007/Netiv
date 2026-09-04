@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Netiv</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-main:#F2FAF3;
+    --bg-panel:#FFFFFF;
+    --border:#BFE3C9;
+    --border-strong:#8FCE9F;
+    --ink:#173622;
+    --muted:#5C7A68;
+    --muted-2:#7C9689;
+    --accent:#2F9E56;
+    --accent-dark:#20793F;
+    --accent-soft:rgba(47,158,86,0.08);
+    --hazard:#C1502E;
+    --white:#FFFFFF;
+  }
+  html.dark-mode{
+    --bg-main:#0F1B13; --bg-panel:#16261C; --border:#264936; --border-strong:#33654A;
+    --ink:#E7F5EC; --muted:#9FBBAB; --muted-2:#7C9689; --accent-soft:rgba(47,158,86,0.16);
+  }
+  html.text-lg body{ font-size:17px; }
+  html.text-sm body{ font-size:14px; }
+  html.high-contrast{ --border:#000; }
+  html.high-contrast body{ filter:contrast(1.15); }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg-main); font-family:'Inter',sans-serif; color:var(--ink);
+    background-image:
+      radial-gradient(ellipse 800px 500px at 8% 0%, rgba(143,206,159,0.55) 0%, rgba(143,206,159,0) 60%),
+      radial-gradient(ellipse 700px 450px at 90% 8%, rgba(175,220,180,0.4) 0%, rgba(175,220,180,0) 60%),
+      radial-gradient(ellipse 900px 600px at 30% 100%, rgba(200,232,205,0.5) 0%, rgba(200,232,205,0) 65%);
+    background-repeat:no-repeat; background-attachment:fixed;
+    min-height:100vh;
+  }
+  h1,h2,h3,h4{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+
+  .topbar{
+    display:flex; align-items:center; gap:14px; max-width:960px; margin:0 auto;
+    padding:24px 24px 0;
+  }
+  .back-link{
+    display:flex; align-items:center; gap:6px; text-decoration:none; color:var(--muted);
+    font-size:13.5px; font-weight:600; padding:8px 12px; border-radius:3px; border:1px solid var(--border);
+    background:var(--bg-panel);
+  }
+  .back-link:hover{ color:var(--accent-dark); border-color:var(--accent); }
+  .back-link svg{ width:15px; height:15px; stroke:currentColor; }
+
+  .wrap{ max-width:960px; margin:0 auto; padding:26px 24px 60px; }
+
+  .settings-header{
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    padding:32px 34px; border-radius:12px; margin-bottom:24px; position:relative; overflow:hidden;
+  }
+  .settings-header::before{
+    content:""; position:absolute; width:220px; height:220px; border-radius:50%;
+    background:rgba(255,255,255,0.08); top:-100px; right:-60px;
+  }
+  .settings-header h1{ color:var(--white); font-size:24px; margin:0 0 6px; position:relative; }
+  .settings-header p{ color:rgba(255,255,255,0.85); font-size:13.5px; margin:0; position:relative; }
+
+  .settings-body{
+    display:flex; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; min-height:480px;
+  }
+  @media(max-width:680px){ .settings-body{ flex-direction:column; } }
+
+  .settings-nav{ width:200px; flex-shrink:0; border-right:1px solid var(--border); padding:18px 10px; }
+  @media(max-width:680px){ .settings-nav{ width:100%; border-right:none; border-bottom:1px solid var(--border); display:flex; overflow-x:auto; gap:4px; } }
+  .settings-tab{
+    width:100%; display:flex; align-items:center; gap:10px; padding:11px 12px;
+    border-radius:8px; border:none; background:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:13.5px; color:var(--muted); text-align:left; white-space:nowrap;
+  }
+  .settings-tab svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.6; flex-shrink:0; }
+  .settings-tab:hover{ background:var(--accent-soft); color:var(--ink); }
+  .settings-tab.active{ background:var(--accent-soft); color:var(--accent-dark); font-weight:600; }
+
+  .settings-panels{ flex:1; padding:30px 34px; }
+  .settings-panel{ display:none; }
+  .settings-panel.active{ display:block; animation:panelIn .3s ease; }
+  @keyframes panelIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .settings-panel h2{ font-size:17px; margin:0 0 4px; color:var(--ink); }
+  .settings-panel .sub{ font-size:12.5px; color:var(--muted); margin:0 0 22px; }
+  .divider{ border:none; border-top:1px solid var(--border); margin:22px 0; }
+
+  label{ display:block; font-size:12.5px; color:var(--accent-dark); font-weight:600; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:8px; }
+  .field{ margin-bottom:18px; }
+  input[type=text], input[type=tel], input[type=password]{
+    width:100%; background:var(--bg-main); border:1px solid var(--border);
+    border-radius:3px; color:var(--ink); padding:11px 12px; font-family:'Inter',sans-serif; font-size:14.5px;
+  }
+  input::placeholder{ color:var(--muted-2); }
+  input:focus{ outline:none; border-color:var(--accent); }
+  .field-hint{ font-size:11.5px; color:var(--muted-2); margin-top:6px; }
+
+  .btn{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px;
+    border-radius:3px; padding:11px 18px; cursor:pointer; border:1px solid var(--accent);
+    background:transparent; color:var(--accent-dark);
+  }
+  .btn-solid{ background:var(--accent); color:var(--white); border-color:var(--accent); }
+  .btn-solid:hover{ background:var(--accent-dark); }
+  .btn-ghost{ border-color:var(--border); color:var(--muted); }
+  .btn-ghost:hover{ background:var(--accent-soft); color:var(--ink); }
+  .danger-btn{
+    border:1px solid rgba(193,80,46,0.4); color:var(--hazard); background:rgba(193,80,46,0.06);
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px;
+    border-radius:3px; padding:10px 16px; cursor:pointer;
+  }
+  .danger-btn:hover{ background:var(--hazard); color:var(--white); }
+
+  .settings-status{ font-size:12.5px; margin-top:10px; display:none; }
+  .settings-status.shown{ display:block; }
+  .settings-status.ok{ color:var(--accent-dark); }
+  .settings-status.err{ color:var(--hazard); }
+
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+  .switch-row:last-child{ border-bottom:none; }
+  .switch-text .st-t{ font-size:13.5px; font-weight:600; color:var(--ink); }
+  .switch-text .st-d{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .slider{ position:absolute; inset:0; background:var(--border-strong); border-radius:24px; cursor:pointer; transition:background .2s ease; }
+  .switch .slider::before{ content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:var(--white); border-radius:50%; transition:transform .2s ease; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+  .switch input:checked + .slider{ background:var(--accent); }
+  .switch input:checked + .slider::before{ transform:translateX(18px); }
+
+  .pill-group{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pill-btn{
+    border:1px solid var(--border); background:var(--bg-main); color:var(--muted);
+    padding:8px 16px; border-radius:20px; font-family:'Inter',sans-serif; font-size:13px; cursor:pointer;
+  }
+  .pill-btn:hover{ border-color:var(--accent); color:var(--ink); }
+  .pill-btn.active{ background:var(--accent); border-color:var(--accent); color:var(--white); font-weight:600; }
+
+  .data-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border); gap:14px; }
+  .data-row:last-child{ border-bottom:none; }
+  .data-row .dt{ font-size:13.5px; font-weight:600; color:var(--ink); }
+  .data-row .dd{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .reports-list{ margin-bottom:8px; }
+  .report-item{ padding:14px 0; border-bottom:1px solid var(--border); }
+  .report-item:last-child{ border-bottom:none; }
+  .report-item-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .report-title{ font-size:13.5px; font-weight:600; color:var(--ink); }
+  .report-date{ font-size:11.5px; color:var(--muted-2); margin-top:2px; }
+  .report-badge{ font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; white-space:nowrap; text-transform:capitalize; }
+  .report-badge.submitted{ background:rgba(47,158,86,0.12); color:var(--accent-dark); }
+  .report-badge.in-progress{ background:rgba(226,166,44,0.14); color:#8A6A16; }
+  .report-badge.resolved{ background:rgba(47,158,86,0.18); color:var(--accent-dark); }
+  .report-badge.rejected{ background:rgba(193,80,46,0.12); color:var(--hazard); }
+  .report-progress-track{ width:100%; height:6px; border-radius:4px; background:var(--border); overflow:hidden; }
+  .report-progress-fill{ height:100%; background:var(--accent); border-radius:4px; transition:width .3s ease; }
+  .report-progress-label{ font-size:11px; color:var(--muted); margin-top:5px; }
+  .reports-empty, .reports-loading, .reports-error{ font-size:12.5px; color:var(--muted); padding:16px 0; text-align:center; }
+  .reports-error{ color:var(--hazard); }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="back-link" href="netiv_2.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7" stroke-linecap="round"/></svg>
+      Back to Netiv
+    </a>
+  </div>
+
+  <div class="wrap">
+    <div class="settings-header">
+      <h1>Settings</h1>
+      <p>Manage your account, locations, and preferences</p>
+    </div>
+
+    <div class="settings-body">
+      <div class="settings-nav">
+        <button class="settings-tab active" type="button" onclick="switchTab('profile', this)">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg>
+          Profile
+        </button>
+        <button class="settings-tab" type="button" onclick="switchTab('locations', this)">
+          <svg viewBox="0 0 24 24"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>
+          Locations
+        </button>
+        <button class="settings-tab" type="button" onclick="switchTab('security', this)">
+          <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+          Security
+        </button>
+        <button class="settings-tab" type="button" onclick="switchTab('preferences', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a1.7 1.7 0 00.34 1.87M4.6 10.5a1.7 1.7 0 00-.34-1.87"/></svg>
+          Preferences
+        </button>
+        <button class="settings-tab" type="button" onclick="switchTab('data', this)">
+          <svg viewBox="0 0 24 24"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7"/></svg>
+          Data &amp; Storage
+        </button>
+      </div>
+
+      <div class="settings-panels">
+
+        <!-- 1. Profile -->
+        <div class="settings-panel active" id="panel-profile">
+          <h2>Profile</h2>
+          <p class="sub">This is used to pre-fill your name and phone number on reports.</p>
+          <form onsubmit="return saveProfile(event)">
+            <div class="field"><label>Full name</label><input type="text" id="setName" placeholder="Full name"></div>
+            <div class="field"><label>Email address</label><input type="text" id="setEmail" placeholder="you@example.com" readonly style="opacity:0.65; cursor:not-allowed;"><div style="font-size:11.5px; color:var(--muted-2); margin-top:4px;">Email can't be changed here.</div></div>
+            <div class="field"><label>Phone number</label><input type="tel" id="setPhone" placeholder="10-digit mobile number"></div>
+            <button class="btn btn-solid" type="submit">Save profile</button>
+            <div class="settings-status" id="profileStatus"></div>
+          </form>
+        </div>
+
+        <!-- 4. Locations -->
+        <div class="settings-panel" id="panel-locations">
+          <h2>Saved Locations</h2>
+          <p class="sub">Save your Home and Work address so location auto-fills faster.</p>
+          <form onsubmit="return saveLocations(event)">
+            <div class="field"><label>🏠 Home address</label><input type="text" id="setHomeAddr" placeholder="House no, area, landmark, city, pincode"></div>
+            <div class="field"><label>💼 Work address</label><input type="text" id="setWorkAddr" placeholder="House no, area, landmark, city, pincode"></div>
+            <button class="btn btn-solid" type="submit">Save locations</button>
+            <div class="settings-status" id="locationsStatus"></div>
+          </form>
+        </div>
+
+        <!-- 5. Security -->
+        <div class="settings-panel" id="panel-security">
+          <h2>Security</h2>
+          <p class="sub">Update your password or sign out everywhere.</p>
+          <form onsubmit="return changePassword(event)">
+            <div class="field"><label>Current password</label><input type="password" id="setCurPass" placeholder="••••••••"></div>
+            <div class="field">
+              <label>New password</label>
+              <input type="password" id="setNewPass" placeholder="••••••••">
+              <div class="field-hint">Min 8 characters, 1 capital letter, 1 special character.</div>
+            </div>
+            <div class="field"><label>Confirm new password</label><input type="password" id="setConfirmPass" placeholder="••••••••"></div>
+            <button class="btn btn-solid" type="submit">Update password</button>
+            <div class="settings-status" id="passwordStatus"></div>
+          </form>
+          <hr class="divider">
+          <div class="data-row">
+            <div>
+              <div class="dt">Log out of all devices</div>
+              <div class="dd">Ends every active session, including this one.</div>
+            </div>
+            <button class="danger-btn" type="button" onclick="logoutEverywhere()">Log out everywhere</button>
+          </div>
+        </div>
+
+        <!-- 3. Language, 6. Theme, 9. Accessibility -->
+        <div class="settings-panel" id="panel-preferences">
+          <h2>Preferences</h2>
+          <p class="sub">Language, appearance, and accessibility.</p>
+
+          <div class="field">
+            <label>Language</label>
+            <div class="pill-group" id="langGroup">
+              <button class="pill-btn active" type="button" onclick="setLanguage('en', this)">English</button>
+              <button class="pill-btn" type="button" onclick="setLanguage('te', this)">తెలుగు (Telugu)</button>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="switch-row">
+            <div class="switch-text"><div class="st-t">Dark mode</div><div class="st-d">Switch the app to a dark color theme.</div></div>
+            <label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme(this.checked)"><span class="slider"></span></label>
+          </div>
+          <div class="switch-row">
+            <div class="switch-text"><div class="st-t">High contrast</div><div class="st-d">Increase contrast for better readability.</div></div>
+            <label class="switch"><input type="checkbox" id="contrastToggle" onchange="toggleHighContrast(this.checked)"><span class="slider"></span></label>
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <label>Text size</label>
+            <div class="pill-group" id="textSizeGroup">
+              <button class="pill-btn" type="button" onclick="setTextSize('sm', this)">A-</button>
+              <button class="pill-btn active" type="button" onclick="setTextSize('md', this)">A</button>
+              <button class="pill-btn" type="button" onclick="setTextSize('lg', this)">A+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. Data & Storage -->
+        <div class="settings-panel" id="panel-data">
+          <h2>Data &amp; Storage</h2>
+          <p class="sub">See your past reports and manage what's stored on this device.</p>
+
+          <div class="field">
+            <label>Past reports</label>
+            <div class="reports-list" id="reportsList">
+              <div class="reports-loading" id="reportsLoading">Loading your reports…</div>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="data-row">
+            <div><div class="dt">Clear saved reports history</div><div class="dd">Removes locally cached past reports (does not affect GVMC's records).</div></div>
+            <button class="danger-btn" type="button" onclick="clearSavedReports()">Clear history</button>
+          </div>
+          <div class="settings-status" id="dataStatus"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = '';
+
+function switchTab(id, btn){
+  document.querySelectorAll('.settings-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+/* 1. Profile */
+async function loadProfile(){
+  const token = localStorage.getItem('netiv_token');
+  if(!token){
+    // Not logged in — send them back to the main app to log in first.
+    window.location.href = 'index.html';
+    return;
+  }
+  try{
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Could not load profile.');
+    document.getElementById('setName').value = data.user.name || '';
+    document.getElementById('setEmail').value = data.user.email || '';
+    document.getElementById('setPhone').value = data.user.phone || '';
+  }catch(err){
+    console.warn('Could not load profile:', err.message);
+  }
+}
+
+async function saveProfile(e){
+  e.preventDefault();
+  const name = document.getElementById('setName').value.trim();
+  const phone = document.getElementById('setPhone').value.trim();
+  const statusEl = document.getElementById('profileStatus');
+  statusEl.classList.remove('shown','ok','err');
+  const token = localStorage.getItem('netiv_token');
+  if(!token){
+    statusEl.textContent = 'You need to be logged in to save your profile.';
+    statusEl.classList.add('shown','err');
+    return false;
+  }
+  try{
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ name, phone })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error(data.error || 'Could not save profile.'); }
+    // Keep the cached user (used for the avatar initials on the main page) in sync.
+    localStorage.setItem('netiv_user', JSON.stringify(data.user));
+    statusEl.textContent = 'Profile saved.'; statusEl.classList.add('shown','ok');
+  }catch(err){
+    statusEl.textContent = err.message || 'Could not reach server.'; statusEl.classList.add('shown','err');
+  }
+  return false;
+}
+
+/* 4. Locations */
+async function saveLocations(e){
+  e.preventDefault();
+  const home = document.getElementById('setHomeAddr').value.trim();
+  const work = document.getElementById('setWorkAddr').value.trim();
+  const statusEl = document.getElementById('locationsStatus');
+  statusEl.classList.remove('shown','ok','err');
+  try{
+    const res = await fetch('/api/locations', {
+      method:'PATCH', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ home, work })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error(data.message || 'Could not save locations.'); }
+    statusEl.textContent = 'Locations saved.'; statusEl.classList.add('shown','ok');
+  }catch(err){
+    statusEl.textContent = err.message || 'Could not reach server.'; statusEl.classList.add('shown','err');
+  }
+  return false;
+}
+
+/* 5. Security */
+function isStrongPassword(pw){
+  return /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]).{8,}$/.test(pw);
+}
+async function changePassword(e){
+  e.preventDefault();
+  const current = document.getElementById('setCurPass').value;
+  const next = document.getElementById('setNewPass').value;
+  const confirm = document.getElementById('setConfirmPass').value;
+  const statusEl = document.getElementById('passwordStatus');
+  statusEl.classList.remove('shown','ok','err');
+  if(!isStrongPassword(next)){
+    statusEl.textContent = 'New password needs 8+ characters, 1 capital letter and 1 special character.';
+    statusEl.classList.add('shown','err'); return false;
+  }
+  if(next !== confirm){
+    statusEl.textContent = 'New passwords do not match.'; statusEl.classList.add('shown','err'); return false;
+  }
+  try{
+    const res = await fetch('/api/change-password', {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ currentPassword: current, newPassword: next })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error(data.message || 'Could not update password.'); }
+    statusEl.textContent = 'Password updated.'; statusEl.classList.add('shown','ok');
+    e.target.reset();
+  }catch(err){
+    statusEl.textContent = err.message || 'Could not reach server.'; statusEl.classList.add('shown','err');
+  }
+  return false;
+}
+async function logoutEverywhere(){
+  if(!confirm('Log out of all devices, including this one?')) return;
+  const token = localStorage.getItem('netiv_token');
+  try{
+    if(token){
+      await fetch(`${API_BASE}/api/auth/logout-all`, {
+        method:'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
+  }catch(err){}
+  localStorage.removeItem('netiv_token');
+  localStorage.removeItem('netiv_user');
+  window.location.href = 'index.html';
+}
+
+/* 3. Language */
+function setLanguage(lang, btn){
+  document.querySelectorAll('#langGroup .pill-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  localStorage.setItem('netiv_lang', lang);
+}
+
+/* 6. Theme */
+function toggleTheme(isDark){
+  document.documentElement.classList.toggle('dark-mode', isDark);
+  localStorage.setItem('netiv_theme', isDark ? 'dark' : 'light');
+}
+
+/* 9. Accessibility */
+function toggleHighContrast(isOn){
+  document.documentElement.classList.toggle('high-contrast', isOn);
+  localStorage.setItem('netiv_contrast', isOn ? 'on' : 'off');
+}
+function setTextSize(size, btn){
+  document.querySelectorAll('#textSizeGroup .pill-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.documentElement.classList.remove('text-sm','text-lg');
+  if(size === 'sm') document.documentElement.classList.add('text-sm');
+  if(size === 'lg') document.documentElement.classList.add('text-lg');
+  localStorage.setItem('netiv_textsize', size);
+}
+
+/* 8. Data & Storage — Past Reports */
+function reportBadgeClass(status){
+  const s = (status || '').toLowerCase().replace(/\s+/g, '-');
+  if(['submitted','in-progress','resolved','rejected'].includes(s)) return s;
+  return 'submitted';
+}
+function renderReports(reports){
+  const list = document.getElementById('reportsList');
+  if(!reports || reports.length === 0){
+    list.innerHTML = '<div class="reports-empty">No past reports yet. Reports you submit will show up here.</div>';
+    return;
+  }
+  list.innerHTML = reports.map(r => {
+    const title = r.category_name || r.title || r.type || 'Report';
+    const rawDate = r.created_at || r.date || r.createdAt || '';
+    const date = rawDate ? new Date(rawDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '';
+    const status = r.status || 'submitted';
+    const refNo = r.reference_no ? ` · #${r.reference_no}` : '';
+    return `
+      <div class="report-item">
+        <div class="report-item-top">
+          <div>
+            <div class="report-title">${title}${refNo}</div>
+            ${date ? `<div class="report-date">${date}</div>` : ''}
+          </div>
+          <span class="report-badge ${reportBadgeClass(status)}">${status}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+function cacheReports(reports){
+  try{ localStorage.setItem('netiv_reports', JSON.stringify(reports)); }catch(err){}
+}
+function loadCachedReports(){
+  try{
+    const raw = localStorage.getItem('netiv_reports');
+    return raw ? JSON.parse(raw) : null;
+  }catch(err){ return null; }
+}
+async function loadReports(){
+  const list = document.getElementById('reportsList');
+  const token = localStorage.getItem('netiv_token');
+  if(!token){
+    list.innerHTML = '<div class="reports-error">Log in to see your report history.</div>';
+    return;
+  }
+  try{
+    const res = await fetch(`${API_BASE}/api/reports`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if(!res.ok) throw new Error('Could not load reports.');
+    const data = await res.json();
+    const reports = Array.isArray(data) ? data : (data.reports || []);
+    cacheReports(reports);
+    renderReports(reports);
+  }catch(err){
+    const cached = loadCachedReports();
+    if(cached){
+      renderReports(cached);
+    }else{
+      list.innerHTML = '<div class="reports-error">Could not load your reports. Check your connection and try again.</div>';
+    }
+  }
+}
+async function clearSavedReports(){
+  if(!confirm('Clear your report history? This cannot be undone.')) return;
+  const s = document.getElementById('dataStatus');
+  s.classList.remove('shown','ok','err');
+  const token = localStorage.getItem('netiv_token');
+  try{
+    if(token){
+      await fetch(`${API_BASE}/api/reports`, {
+        method:'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    }
+  }catch(err){ /* still clear local cache even if server call fails */ }
+  localStorage.removeItem('netiv_reports');
+  renderReports([]);
+  s.textContent = 'Report history cleared.'; s.classList.add('shown','ok');
+}
+
+/* Restore saved preferences on load */
+(function restorePrefs(){
+  if(localStorage.getItem('netiv_theme') === 'dark'){
+    document.documentElement.classList.add('dark-mode');
+  }
+  if(localStorage.getItem('netiv_contrast') === 'on'){
+    document.documentElement.classList.add('high-contrast');
+  }
+  const size = localStorage.getItem('netiv_textsize');
+  if(size && size !== 'md') document.documentElement.classList.add(size === 'sm' ? 'text-sm' : 'text-lg');
+  window.addEventListener('DOMContentLoaded', ()=>{
+    if(localStorage.getItem('netiv_theme') === 'dark'){ const t=document.getElementById('themeToggle'); if(t) t.checked = true; }
+    if(localStorage.getItem('netiv_contrast') === 'on'){ const c=document.getElementById('contrastToggle'); if(c) c.checked = true; }
+    loadProfile();
+    loadReports();
+  });
+})();
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
-const db = require('../db');
+const { db } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { sendReportEmail } = require('../utils/mailer');
 
@@ -84,8 +84,6 @@ ${phone}
 }
 
 // POST /api/reports  (protected, multipart/form-data)
-// fields: categoryId, categoryName, deptName, description, lat, lng, house, area, landmark, city, pincode, name, phone
-// file:   photo
 router.post('/', requireAuth, upload.single('photo'), async (req, res) => {
   try {
     const { categoryId, categoryName, deptName, description, lat, lng, house, area, landmark, city, pincode, name, phone } = req.body;
@@ -104,16 +102,19 @@ router.post('/', requireAuth, upload.single('photo'), async (req, res) => {
       name: citizenName, phone: citizenPhone,
     });
 
-    db.prepare(`
-      INSERT INTO reports
-        (reference_no, user_id, category_id, category_name, dept_name, description, lat, lng, house, area, landmark, city, pincode, photo_path, citizen_name, citizen_phone, letter_text)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      referenceNo, req.user.id, categoryId, categoryName, deptName, description || '',
-      lat ? Number(lat) : null, lng ? Number(lng) : null,
-      house || '', area || '', landmark || '', city || '', pincode || '',
-      photoPath, citizenName, citizenPhone, letterText
-    );
+    await db.execute({
+      sql: `
+        INSERT INTO reports
+          (reference_no, user_id, category_id, category_name, dept_name, description, lat, lng, house, area, landmark, city, pincode, photo_path, citizen_name, citizen_phone, letter_text)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      args: [
+        referenceNo, req.user.id, categoryId, categoryName, deptName, description || '',
+        lat ? Number(lat) : null, lng ? Number(lng) : null,
+        house || '', area || '', landmark || '', city || '', pincode || '',
+        photoPath, citizenName, citizenPhone, letterText
+      ],
+    });
 
     const { zone, receiverEmail } = await sendReportEmail({
       subject: `Civic complaint [${referenceNo}]: ${categoryName} — ${citizenName}`,
@@ -131,56 +132,85 @@ router.post('/', requireAuth, upload.single('photo'), async (req, res) => {
 });
 
 // GET /api/reports  (protected) — current user's reports, most recent first
-router.get('/', requireAuth, (req, res) => {
-  const rows = db
-    .prepare('SELECT * FROM reports WHERE user_id = ? ORDER BY created_at DESC')
-    .all(req.user.id);
-  res.json({ reports: rows });
+router.get('/', requireAuth, async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM reports WHERE user_id = ? ORDER BY created_at DESC',
+      args: [req.user.id],
+    });
+    res.json({ reports: result.rows });
+  } catch (err) {
+    console.error('Fetch reports error:', err);
+    res.status(500).json({ error: 'Could not fetch reports.' });
+  }
 });
 
 // GET /api/reports/:id  (protected)
-router.get('/:id', requireAuth, (req, res) => {
-  const row = db
-    .prepare('SELECT * FROM reports WHERE id = ? AND user_id = ?')
-    .get(req.params.id, req.user.id);
-  if (!row) return res.status(404).json({ error: 'Report not found.' });
-  res.json({ report: row });
-});
-
-// DELETE /api/reports/:id  (protected) — delete one letter from history
-router.delete('/:id', requireAuth, (req, res) => {
-  const row = db
-    .prepare('SELECT * FROM reports WHERE id = ? AND user_id = ?')
-    .get(req.params.id, req.user.id);
-
-  if (!row) return res.status(404).json({ error: 'Report not found.' });
-
-  db.prepare('DELETE FROM reports WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
-
-  if (row.photo_path) {
-    fs.unlink(row.photo_path, (err) => {
-      if (err) console.warn('Could not delete photo file:', row.photo_path, err.message);
+router.get('/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM reports WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
     });
+    if (!result.rows[0]) return res.status(404).json({ error: 'Report not found.' });
+    res.json({ report: result.rows[0] });
+  } catch (err) {
+    console.error('Fetch report error:', err);
+    res.status(500).json({ error: 'Could not fetch report.' });
   }
-
-  res.json({ deleted: true, id: Number(req.params.id) });
 });
 
-// DELETE /api/reports  (protected) — clear a user's entire history
-router.delete('/', requireAuth, (req, res) => {
-  const rows = db.prepare('SELECT photo_path FROM reports WHERE user_id = ?').all(req.user.id);
+// DELETE /api/reports/:id  (protected)
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT * FROM reports WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    });
+    const row = result.rows[0];
+    if (!row) return res.status(404).json({ error: 'Report not found.' });
 
-  db.prepare('DELETE FROM reports WHERE user_id = ?').run(req.user.id);
+    await db.execute({
+      sql: 'DELETE FROM reports WHERE id = ? AND user_id = ?',
+      args: [req.params.id, req.user.id],
+    });
 
-  rows.forEach((row) => {
     if (row.photo_path) {
       fs.unlink(row.photo_path, (err) => {
         if (err) console.warn('Could not delete photo file:', row.photo_path, err.message);
       });
     }
-  });
 
-  res.json({ deleted: true, count: rows.length });
+    res.json({ deleted: true, id: Number(req.params.id) });
+  } catch (err) {
+    console.error('Delete report error:', err);
+    res.status(500).json({ error: 'Could not delete report.' });
+  }
+});
+
+// DELETE /api/reports  (protected) — clear a user's entire history
+router.delete('/', requireAuth, async (req, res) => {
+  try {
+    const result = await db.execute({
+      sql: 'SELECT photo_path FROM reports WHERE user_id = ?',
+      args: [req.user.id],
+    });
+
+    await db.execute({ sql: 'DELETE FROM reports WHERE user_id = ?', args: [req.user.id] });
+
+    result.rows.forEach((row) => {
+      if (row.photo_path) {
+        fs.unlink(row.photo_path, (err) => {
+          if (err) console.warn('Could not delete photo file:', row.photo_path, err.message);
+        });
+      }
+    });
+
+    res.json({ deleted: true, count: result.rows.length });
+  } catch (err) {
+    console.error('Clear reports error:', err);
+    res.status(500).json({ error: 'Could not clear reports.' });
+  }
 });
 
 module.exports = router;

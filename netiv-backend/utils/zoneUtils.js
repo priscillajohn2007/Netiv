@@ -1,27 +1,25 @@
 // utils/zoneUtils.js — resolves a free-text area name to a zone.
 // Single source of truth so mailer.js and the helpline route stay in sync.
+//
+// Uses loose substring matching: if any known locality name appears
+// anywhere in the typed/geocoded text, that locality's zone is returned.
 
 const areaToZone = require('../areaToZone');
 
 /**
- * Resolves a free-text area name to a zone. Handles compound strings from
- * reverse-geocoding (e.g. "Sai Madhava Nagar, Naiduthota") by trying the
- * whole string first, then each comma-separated part on its own — so a
- * match on any recognized locality within the string still succeeds.
+ * Resolves a free-text area name to a zone.
  * @param {string} area
- * @returns {string} zone name, or 'Unknown' if unrecognized
+ * @returns {string} zone name, or 'Unknown' if truly nothing matches
  */
 function resolveZoneName(area) {
-  const raw = (area || '').trim().toLowerCase();
-  if (!raw) return 'Unknown';
+  const clean = (area || '').trim().toLowerCase();
+  if (!clean) return 'Unknown';
 
-  if (areaToZone[raw]) return areaToZone[raw];
-
-  const parts = raw.split(',').map(p => p.trim()).filter(Boolean);
-  for (const part of parts) {
-    if (areaToZone[part]) return areaToZone[part];
+  for (const key of Object.keys(areaToZone)) {
+    if (clean.includes(key)) {
+      return areaToZone[key];
+    }
   }
-
   return 'Unknown';
 }
 
