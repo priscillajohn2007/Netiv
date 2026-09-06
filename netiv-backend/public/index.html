@@ -1372,10 +1372,12 @@ locBtn.addEventListener('click', ()=>{
     const address = data.address;
     document.getElementById("houseInput").value =
         address.house_number || "";
+    // Combine both the specific sub-locality (neighbourhood) and the
+    // broader area (suburb) when available — if the fine-grained name
+    // isn't in our zone list but the broader one is, matching still works.
+    const areaParts = [address.neighbourhood, address.suburb].filter(Boolean);
     document.getElementById("areaInput").value =
-        address.suburb ||
-        address.neighbourhood ||
-        address.road || "";
+        areaParts.length ? areaParts.join(", ") : (address.road || "");
     document.getElementById("landmarkInput").value =
         address.road || "";
     document.getElementById("cityInput").value =
