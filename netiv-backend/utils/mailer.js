@@ -4,14 +4,8 @@
 const nodemailer = require('nodemailer');
 const zoneEmails = require('../zoneEmails');
 const { resolveZoneWithFallback } = require('./zoneUtils');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const fs = require('fs');
+const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 // Hardcoded last-resort recipient — used only if the zone lookup fails AND
 // both DEFAULT_COMPLAINT_EMAIL and GVMC_EMAIL are missing from the environment.
@@ -61,22 +55,39 @@ async function sendReportEmail({ subject, letterText, citizenEmail, area, city, 
     // but fail loudly rather than silently send with no "to" address if it ever happens.
     throw new Error('No recipient email could be determined for this report.');
   }
+  const payload = {
+    sender: { name: 'Netiv Civic Reporter', email: process.env.EMAIL_USER },
+    to: [{ email: receiverEmail }],
+    subject: zone !== 'Unknown' ? `${subject} | ${zone} Zone` : subject,
+    textContent: zone !== 'Unknown' ? `Area: ${area}\nZone: ${zone}\n\n${letterText}` : letterText,
+  };
 
-  const attachments = [];
-  if (photoPath) {
-    attachments.push({ filename: 'evidence.jpg', path: photoPath });
+  if (citizenEmail) {
+    payload.cc = [{ email: citizenEmail }];
   }
 
-  await transporter.sendMail({
-    from: `"Netiv Civic Reporter" <${process.env.EMAIL_USER}>`,
-    to: receiverEmail,
-    cc: citizenEmail || undefined,
-    subject: zone !== 'Unknown' ? `${subject} | ${zone} Zone` : subject,
-    text: zone !== 'Unknown' ? `Area: ${area}\nZone: ${zone}\n\n${letterText}` : letterText,
-    attachments,
+  if (photoPath) {
+    const base64Content = fs.readFileSync(photoPath, { encoding: 'base64' });
+    payload.attachment = [{ content: base64Content, name: 'evidence.jpg' }];
+  }
+
+  const res = await fetch(BREVO_API_URL, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   });
 
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Brevo API error (${res.status}): ${errBody}`);
+  }
+
   return { zone, receiverEmail };
+  
 }
 
 module.exports = { sendReportEmail, resolveZone };
