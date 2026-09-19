@@ -752,6 +752,57 @@
   .hc-footer-links a{ font-size:12px; color:var(--muted-2); text-decoration:none; }
   .hc-footer-links a:hover{ color:var(--accent-dark); }
 </style>
+<style>
+.language-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  background:rgba(20,40,28,0.55);
+  backdrop-filter:blur(4px);
+  padding:20px;
+}
+.language-overlay.shown{
+  display:flex;
+}
+.language-popup{
+  width:100%;
+  max-width:390px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:30px;
+  text-align:center;
+  box-shadow:0 25px 60px rgba(23,54,34,0.25);
+  animation:languagePopupIn .25s ease;
+}
+@keyframes languagePopupIn{
+  from{ opacity:0; transform:translateY(12px) scale(.97); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+.language-icon{
+  width:52px; height:52px; margin:0 auto 14px; border-radius:50%;
+  background:var(--accent-soft); color:var(--accent-dark);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px;
+}
+.language-popup h2{ margin:0 0 8px; color:var(--ink); font-size:22px; }
+.language-popup p{ margin:0 0 20px; color:var(--muted); font-size:13.5px; line-height:1.5; }
+.language-popup select{
+  width:100%; padding:12px; border:1px solid var(--border); border-radius:5px;
+  background:var(--bg-main); color:var(--ink); font-family:'Inter',sans-serif;
+  font-size:14px; margin-bottom:14px; outline:none;
+}
+.language-popup select:focus{ border-color:var(--accent); }
+.language-popup button{
+  width:100%; padding:12px; border:1px solid var(--accent); border-radius:4px;
+  background:var(--accent); color:white; font-family:'Space Grotesk',sans-serif;
+  font-weight:600; font-size:14px; cursor:pointer;
+}
+.language-popup button:hover{ background:var(--accent-dark); }
+</style>
 </head>
 <body class="grid-bg">
 <div class="app-shell">
@@ -797,7 +848,7 @@
 
       <header class="hero">
         <span class="eyebrow">GVMC · Visakhapatnam</span>
-        <h1>Netiv — the bridge between<br>your street and the corporation.</h1>
+        <h1 data-i18n="hero_title">Netiv — the bridge between<br>your street and the corporation.</h1>
         <p>Spot a problem — overflowing garbage, a stagnant drain, a pothole — photograph it, and Netiv turns it into an official letter addressed to the right GVMC department, with your exact location attached.</p>
         <div class="badge-row">
           <div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20" stroke-linecap="round"/></svg>Auto geolocation</div>
@@ -807,13 +858,13 @@
       </header>
 
       <section>
-        <div class="section-title"><span class="num">01</span><h2>What's the problem?</h2></div>
+        <div class="section-title"><span class="num">01</span><h2 data-i18n="section1_title">What's the problem?</h2></div>
         <p class="section-sub">Pick the category closest to what you're reporting. This decides which GVMC department your letter is addressed to.</p>
         <div class="cat-grid" id="catGrid"></div>
         <div class="no-cat-match" id="noCatMatch" style="display:none; margin-top:14px;">No categories match your search.</div>
       </section>
       <section id="reportSection" class="hidden">
-        <div class="section-title"><span class="num">02</span><h2>Show us, and tell us where</h2></div>
+        <div class="section-title"><span class="num">02</span><h2 data-i18n="section2_title">Show us, and tell us where</h2></div>
         <div class="panel">
           <div class="field">
             <label>Photo evidence</label>
@@ -829,7 +880,7 @@
             <div class="loc-box">
               <button class="btn" id="locBtn" type="button">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="15" height="15"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>
-                Detect my location
+                <span data-i18n="btn_detect_location">Detect my location</span>
               </button>
               <span class="loc-status" id="locStatus">Not detected yet</span>
             </div>
@@ -869,13 +920,13 @@
 
           <button class="btn btn-solid" id="generateBtn" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="15" height="15"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
-            Generate official letter
+            <span data-i18n="btn_generate_letter">Generate official letter</span>
           </button>
         </div>
       </section>
 
       <section id="letterSection" class="letter-stage">
-        <div class="section-title"><span class="num">03</span><h2>Your letter is ready</h2></div>
+        <div class="section-title"><span class="num">03</span><h2 data-i18n="letter_ready">Your letter is ready</h2></div>
         <div class="paper" id="paperCard">
           <div class="stamp" id="stampEl">FILED<br>VIA Netiv</div>
           <div class="letterhead">
@@ -898,7 +949,7 @@
           </a>
           <a class="send-card" id="callCard" href="#">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 4h4l2 5-2.5 1.5a11 11 0 006 6L15 14l5 2v4a2 2 0 01-2 2A16 16 0 014 6a2 2 0 012-2z"/></svg>
-            <div class="t">Call the helpline</div>
+            <div class="t" data-i18n="call_helpline">Call the helpline</div>
             <div class="d">See the officials for your area and choose who to call.</div>
           </a>
         </div>
@@ -1242,6 +1293,21 @@
   Ask Netiv
 </button>
 
+<div class="language-overlay" id="languageOverlay">
+  <div class="language-popup">
+    <div class="language-icon">文</div>
+    <h2 data-i18n="choose_language">Choose your language</h2>
+    <p data-i18n="choose_language_desc">Select the language you want to use in Netiv.</p>
+    <select id="startupLanguage">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="te">తెలుగు</option>
+    </select>
+    <button type="button" onclick="confirmStartupLanguage()" data-i18n="continue_button">Continue</button>
+  </div>
+</div>
+
+<script src="Translations.js"></script>
 <script>
 const API_BASE = 'http://localhost:4000';
 
@@ -1267,24 +1333,40 @@ const categories = [
 
 const catGrid = document.getElementById('catGrid');
 let selectedCategory = null;
-categories.forEach(cat=>{
-  const tile = document.createElement('button');
-  tile.className='cat-tile'; tile.type='button'; tile.dataset.id=cat.id;
-  tile.innerHTML = `<svg viewBox="0 0 24 24">${cat.icon}</svg><div class="name">${cat.name}</div><div class="dept">${cat.dept}</div>`;
-  tile.addEventListener('click', ()=>{
-    document.querySelectorAll('.cat-tile').forEach(t=>t.classList.remove('active'));
-    tile.classList.add('active');
-    selectedCategory = cat;
 
-    if (!localStorage.getItem('netiv_token')) {
-      openAuthModal('register');
-      return;
-    }
-    document.getElementById('reportSection').classList.remove('hidden');
-    document.getElementById('reportSection').scrollIntoView({behavior:'smooth', block:'start'});
+function catText(cat, field){
+  // field is 'name' or 'dept'. Uses the current language's cat_<id>/dept_<id>
+  // translation if available, otherwise falls back to the English default.
+  const lang = localStorage.getItem('netiv_lang') || 'en';
+  const dict = (typeof NETIV_I18N !== 'undefined') ? NETIV_I18N[lang] : null;
+  const key = (field === 'name' ? 'cat_' : 'dept_') + cat.id;
+  return (dict && dict[key]) ? dict[key] : cat[field];
+}
+
+function renderCategories(){
+  const previouslySelectedId = selectedCategory ? selectedCategory.id : null;
+  catGrid.innerHTML = '';
+  categories.forEach(cat=>{
+    const tile = document.createElement('button');
+    tile.className='cat-tile'; tile.type='button'; tile.dataset.id=cat.id;
+    if(cat.id === previouslySelectedId) tile.classList.add('active');
+    tile.innerHTML = `<svg viewBox="0 0 24 24">${cat.icon}</svg><div class="name">${catText(cat,'name')}</div><div class="dept">${catText(cat,'dept')}</div>`;
+    tile.addEventListener('click', ()=>{
+      document.querySelectorAll('.cat-tile').forEach(t=>t.classList.remove('active'));
+      tile.classList.add('active');
+      selectedCategory = cat;
+
+      if (!localStorage.getItem('netiv_token')) {
+        openAuthModal('register');
+        return;
+      }
+      document.getElementById('reportSection').classList.remove('hidden');
+      document.getElementById('reportSection').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    catGrid.appendChild(tile);
   });
-  catGrid.appendChild(tile);
-});
+}
+renderCategories();
 
 let photoDataUrl = null;
 const photoZone = document.getElementById('photoZone');
@@ -1793,6 +1875,33 @@ async function submitRegister(){
     shakeBtn(document.getElementById('registerPane'));
   }
 }
+
+/* ===== Language selection ===== */
+function confirmStartupLanguage(){
+  const select = document.getElementById('startupLanguage');
+  const lang = select.value;
+
+  localStorage.setItem('netiv_lang', lang);
+  if(typeof applyLanguage === 'function'){
+    applyLanguage(lang);
+  }
+  document.getElementById('languageOverlay').classList.remove('shown');
+  renderCategories();
+}
+(function showStartupLanguage(){
+  const overlay = document.getElementById('languageOverlay');
+  if(!overlay) return;
+  const savedLang = localStorage.getItem('netiv_lang');
+  if(!savedLang){
+    overlay.classList.add('shown');
+  }else{
+    const select = document.getElementById('startupLanguage');
+    if(select) select.value = savedLang;
+    if(typeof applyLanguage === 'function'){
+      applyLanguage(savedLang);
+    }
+  }
+})();
 </script>
 </body>
 </html>

@@ -121,6 +121,7 @@ router.post('/', requireAuth, upload.single('photo'), async (req, res) => {
       letterText,
       citizenEmail: req.user.email,
       area,
+      city,
       photoPath,
     });
 
