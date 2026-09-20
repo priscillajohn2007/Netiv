@@ -6,7 +6,7 @@ const zoneEmails = {
   Gajuwaka: "shannu301006@gmail.com",
   Pendurthi: "priscillajohnvipparthi@gmail.com",
   Bheemunipatnam: "polamarasettyakhila626@gmail.com",
-  Unknown: "your-email@example.com",
+  Unknown: "vipparthipriscillajohn@gmail.com",
 };
 
 module.exports = zoneEmails;
